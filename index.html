@@ -1319,11 +1319,15 @@ tfoot td{padding:8px 13px;font-size:12.5px}
   </div>
 </div>
 </body></html>`;
+  // Use Blob URL (same approach as document downloads) — works on Vercel/HTTPS
   const blob=new Blob([html],{type:'text/html'});
   const url=URL.createObjectURL(blob);
-  const win=window.open(url,'_blank');
-  if(!win){notify('Please allow popups for this site to print invoices.','err');URL.revokeObjectURL(url);return;}
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const a=document.createElement('a');
+  a.href=url;
+  a.target='_blank';
+  a.rel='noopener';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
 }
 
 // ── WHATSAPP ──
@@ -1348,11 +1352,15 @@ function printFile(c){
   <div class="foot"><span>${settings.cname||'Exprove Passport Limited'} · ${settings.caddr||'Accra, Ghana'}</span><span>Printed: ${new Date().toLocaleString('en-GH')}</span></div>
   <br/><button class="no-print" onclick="window.print()" style="padding:8px 20px;background:#1a5c2a;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;margin-top:10px">🖨 Print This File</button>
   </body></html>`;
+  // Use Blob URL — works on Vercel/HTTPS (no popup blocker issues)
   const blob=new Blob([html],{type:'text/html'});
   const url=URL.createObjectURL(blob);
-  const win=window.open(url,'_blank');
-  if(!win){notify('Please allow popups for this site to print client files.','err');URL.revokeObjectURL(url);return;}
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const a=document.createElement('a');
+  a.href=url;
+  a.target='_blank';
+  a.rel='noopener';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
 }
 
 // ── EXPORT ──
@@ -1401,3 +1409,4 @@ document.querySelectorAll('.mo').forEach(o=>{o.addEventListener('click',e=>{if(e
 </script>
 </body>
 </html>
+
