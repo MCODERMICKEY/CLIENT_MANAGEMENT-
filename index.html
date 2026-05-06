@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Exprove CMS — Client Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --g1:#0d2414;--g2:#1a5c2a;--g3:#2d7a3e;--g4:#3a9c50;
+  --gold:#c8a84b;--gold2:#e2c97e;
+  --cream:#f7f5ef;--white:#fff;--dark:#080f0a;
+  --text:#1e3a26;--muted:#6a8a72;--border:rgba(26,92,42,0.13);
+  --red:#c0392b;--red-bg:#fdecea;
+  --blue:#2471a3;--blue-bg:#e3f2fd;
+  --purple:#7d3c98;--purple-bg:#f3e5f5;
+  --shadow:0 2px 16px rgba(13,36,20,0.09);
+  --shadow-md:0 6px 32px rgba(13,36,20,0.13);
+  --shadow-lg:0 16px 64px rgba(13,36,20,0.18);
+  --r:14px;--rsm:8px;--t:0.22s cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-size:15px}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);display:flex;overflow:hidden;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font-family:inherit}
+img{display:block}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:rgba(26,92,42,0.2);border-radius:10px}
+
+/* SIDEBAR */
+.sidebar{width:256px;flex-shrink:0;background:var(--g1);display:flex;flex-direction:column;height:100vh;overflow-y:auto;position:relative;z-index:20}
+.sb-logo{padding:24px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.07);cursor:pointer}
+.sb-logo img{height:42px;width:auto;object-fit:contain;filter:brightness(0) invert(1)}
+.sb-logo .tagline{font-size:0.62rem;color:rgba(255,255,255,0.35);letter-spacing:2.5px;text-transform:uppercase;margin-top:7px}
+.sb-logo .brand-text{display:none;font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:white;letter-spacing:1px}
+.sb-sec{padding:18px 16px 6px;font-size:0.6rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.28)}
+.nav-btn{display:flex;align-items:center;gap:11px;padding:10px 18px;margin:2px 8px;border-radius:var(--rsm);color:rgba(255,255,255,0.6);font-size:0.85rem;font-weight:500;cursor:pointer;transition:var(--t);border:none;background:none;text-align:left;width:calc(100% - 16px)}
+.nav-btn svg{width:17px;height:17px;flex-shrink:0;stroke-width:2}
+.nav-btn:hover{background:rgba(255,255,255,0.07);color:var(--white)}
+.nav-btn.active{background:var(--g2);color:var(--white)}
+.nb{margin-left:auto;background:var(--gold);color:var(--dark);font-size:0.65rem;font-weight:800;padding:2px 7px;border-radius:20px;min-width:20px;text-align:center}
+.sb-bottom{margin-top:auto;padding:14px 10px;border-top:1px solid rgba(255,255,255,0.07)}
+.sb-user{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--rsm);cursor:pointer;transition:var(--t)}
+.sb-user:hover{background:rgba(255,255,255,0.06)}
+.sb-av{width:34px;height:34px;border-radius:50%;background:var(--g2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.78rem;color:white;flex-shrink:0;overflow:hidden}
+.sb-av img{width:100%;height:100%;object-fit:cover}
+.sb-uname{display:block;font-size:0.82rem;color:white;font-weight:600}
+.sb-urole{font-size:0.68rem;color:rgba(255,255,255,0.4)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:62px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 26px;gap:14px;flex-shrink:0;box-shadow:var(--shadow)}
+.tb-title{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;color:var(--g1)}
+.tb-sub{font-size:0.75rem;color:var(--muted);margin-left:6px}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.tb-date{font-size:0.78rem;color:var(--muted);white-space:nowrap}
+.search-box{position:relative}
+.search-box input{padding:8px 14px 8px 35px;border:1.5px solid var(--border);border-radius:50px;font-size:0.83rem;color:var(--text);background:var(--cream);outline:none;width:210px;transition:var(--t)}
+.search-box input:focus{border-color:var(--g3);background:white;width:250px;box-shadow:0 0 0 3px rgba(45,122,62,0.08)}
+.search-box svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--muted);pointer-events:none}
+.content{flex:1;overflow-y:auto;padding:26px}
+
+/* PAGES */
+.page{display:none}
+.page.active{display:block;animation:fadeIn 0.2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:50px;font-size:0.82rem;font-weight:600;border:none;cursor:pointer;transition:var(--t);white-space:nowrap}
+.btn svg{width:15px;height:15px;flex-shrink:0}
+.btn-primary{background:var(--g2);color:white}
+.btn-primary:hover{background:var(--g3);transform:translateY(-1px);box-shadow:0 4px 16px rgba(26,92,42,0.3)}
+.btn-gold{background:var(--gold);color:var(--dark)}
+.btn-gold:hover{background:var(--gold2);transform:translateY(-1px)}
+.btn-outline{background:white;color:var(--g2);border:1.5px solid var(--border)}
+.btn-outline:hover{border-color:var(--g3);background:var(--cream)}
+.btn-ghost{background:transparent;color:var(--muted);border:1.5px solid var(--border)}
+.btn-ghost:hover{background:var(--cream);color:var(--text)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:none}
+.btn-danger:hover{background:#fadbd8}
+.btn-wa{background:#25D366;color:white;border:none}
+.btn-wa:hover{background:#128C7E;transform:translateY(-1px)}
+.btn-sm{padding:5px 13px;font-size:0.75rem}
+.btn-xs{padding:3px 10px;font-size:0.7rem}
+
+/* CARDS */
+.card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
+.card-hdr{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-hdr h4{font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:800;color:var(--g1)}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.scard{background:white;border-radius:var(--r);padding:20px;border:1px solid var(--border);position:relative;overflow:hidden;transition:var(--t)}
+.scard:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.scard::after{content:'';position:absolute;top:0;right:0;width:3px;height:100%;background:var(--ac,var(--g3))}
+.scard-ico{position:absolute;top:16px;right:14px;width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:var(--ac-bg,#e8f5e9)}
+.scard-ico svg{width:17px;height:17px;stroke:var(--ac,var(--g3));stroke-width:2}
+.scard h3{font-family:'Syne',sans-serif;font-size:1.9rem;font-weight:800;color:var(--g1);line-height:1;margin-bottom:4px}
+.scard p{font-size:0.78rem;color:var(--muted);font-weight:500}
+.scard-ch{font-size:0.7rem;margin-top:7px;font-weight:600;color:var(--g3)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:0.7rem;font-weight:700;letter-spacing:0.2px}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.b-pending{background:#fff8e1;color:#e67e22}
+.b-processing{background:var(--blue-bg);color:var(--blue)}
+.b-review{background:var(--purple-bg);color:var(--purple)}
+.b-approved{background:#e8f5e9;color:var(--g3)}
+.b-completed{background:#e8f5e9;color:var(--g2)}
+.b-rejected{background:var(--red-bg);color:var(--red)}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 14px;text-align:left;font-size:0.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);background:var(--cream);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:12px 14px;font-size:0.83rem;color:var(--text);border-bottom:1px solid rgba(0,0,0,0.04);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(26,92,42,0.02);cursor:pointer}
+.td-name{font-weight:700;color:var(--g1)}
+.td-id{font-size:0.7rem;color:var(--muted);font-family:monospace;margin-top:1px}
+
+/* PAGE HEADER */
+.pg-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap}
+.pg-hdr h2{font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;color:var(--g1)}
+.pg-hdr p{font-size:0.82rem;color:var(--muted);margin-top:2px}
+.pg-hdr-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* FILTER */
+.filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.fchip{padding:5px 14px;border-radius:50px;font-size:0.78rem;font-weight:500;border:1.5px solid var(--border);background:white;color:var(--muted);cursor:pointer;transition:var(--t)}
+.fchip.active,.fchip:hover{border-color:var(--g2);background:var(--g2);color:white}
+
+/* CLIENT CARDS */
+.clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.cc{background:white;border-radius:var(--r);border:1px solid var(--border);padding:18px;transition:var(--t);cursor:pointer}
+.cc:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:rgba(26,92,42,0.28)}
+.cc-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.cc-av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--g2),var(--g4));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:800;color:white;flex-shrink:0;overflow:hidden}
+.cc-av img{width:100%;height:100%;object-fit:cover}
+.cc-name{font-weight:700;font-size:0.92rem;color:var(--g1);line-height:1.2}
+.cc-id{font-size:0.68rem;color:var(--muted);font-family:monospace;margin-top:2px}
+.cc-meta{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.cc-mi label{display:block;font-size:0.62rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:1px}
+.cc-mi span{font-size:0.8rem;color:var(--text);font-weight:500}
+.cc-foot{margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:6px}
+
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,0.52);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px}
+.mo.open{display:flex;animation:moFade 0.2s ease}
+@keyframes moFade{from{opacity:0}to{opacity:1}}
+.mo-box{background:white;border-radius:20px;width:100%;max-width:700px;max-height:94vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:moSlide 0.25s ease}
+@keyframes moSlide{from{transform:translateY(20px)}to{transform:translateY(0)}}
+.mo-hdr{padding:22px 26px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:white;z-index:1}
+.mo-hdr h3{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;color:var(--g1)}
+.mo-close{width:30px;height:30px;border:none;background:var(--cream);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;color:var(--muted);transition:var(--t)}
+.mo-close:hover{background:#fee;color:var(--red)}
+.mo-body{padding:22px 26px}
+.mo-foot{padding:14px 26px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:white}
+
+/* FORM */
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:0.75rem;font-weight:700;color:var(--g1);margin-bottom:5px}
+.fg input,.fg select,.fg textarea{width:100%;padding:9px 13px;border:1.5px solid var(--border);border-radius:var(--rsm);font-size:0.85rem;color:var(--text);background:var(--cream);outline:none;transition:var(--t)}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--g3);background:white;box-shadow:0 0 0 3px rgba(45,122,62,0.09)}
+.fg textarea{resize:vertical;min-height:72px}
+.fg.full{grid-column:1/-1}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fsec{margin:18px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.fsec-title{font-size:0.68rem;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted)}
+
+/* Photo upload */
+.photo-upload{width:72px;height:72px;border-radius:50%;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:var(--cream);flex-shrink:0;position:relative;transition:var(--t)}
+.photo-upload:hover{border-color:var(--g3)}
+.photo-upload img{width:100%;height:100%;object-fit:cover;display:none}
+.photo-upload svg{width:22px;height:22px;stroke:var(--muted)}
+
+/* File drop */
+.file-drop{border:2px dashed var(--border);border-radius:var(--r);padding:22px;text-align:center;cursor:pointer;transition:var(--t);background:var(--cream);position:relative}
+.file-drop:hover,.file-drop.dv{border-color:var(--g3);background:rgba(45,122,62,0.03)}
+.file-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.fdi{width:40px;height:40px;background:white;border-radius:10px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+.fdi svg{width:20px;height:20px;stroke:var(--g3)}
+.file-drop p{font-size:0.82rem;color:var(--muted)}
+.file-drop strong{color:var(--g2);font-weight:600}
+.fl{margin-top:10px;display:flex;flex-direction:column;gap:7px}
+.fi{display:flex;align-items:center;gap:9px;padding:9px 12px;background:white;border-radius:var(--rsm);border:1px solid var(--border)}
+.fi-ico{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fi-name{font-size:0.8rem;font-weight:600;color:var(--g1);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fi-sz{font-size:0.7rem;color:var(--muted);white-space:nowrap}
+.fi-rm{width:22px;height:22px;border:none;background:none;color:var(--muted);border-radius:50%;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;transition:var(--t);flex-shrink:0}
+.fi-rm:hover{background:var(--red-bg);color:var(--red)}
+
+/* Tracker */
+.tr-steps{display:flex;align-items:flex-start;gap:0}
+.tr-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+.tr-circ{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;transition:var(--t)}
+.tr-circ.done{background:var(--g2);color:white}
+.tr-circ.active{background:var(--gold);color:var(--dark)}
+.tr-circ.wait{background:var(--cream);color:var(--muted);border:2px solid var(--border)}
+.tr-lbl{font-size:0.63rem;font-weight:600;color:var(--muted);text-align:center}
+.tr-line{flex:1;height:2px;background:var(--border);margin-bottom:24px;transition:var(--t)}
+.tr-line.done{background:var(--g2)}
+
+/* Progress */
+.prog{height:6px;background:var(--cream);border-radius:10px;overflow:hidden}
+.prog-f{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--g2),var(--g4));transition:width 0.7s ease}
+
+/* Activity */
+.act-item{padding:13px 18px;display:flex;align-items:flex-start;gap:11px;border-bottom:1px solid var(--border)}
+.act-item:last-child{border-bottom:none}
+.act-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.act-dot svg{width:14px;height:14px}
+.act-text strong{display:block;font-size:0.82rem;font-weight:600;color:var(--g1)}
+.act-text span{font-size:0.72rem;color:var(--muted)}
+
+/* Empty */
+.empty{text-align:center;padding:50px 20px;color:var(--muted)}
+.empty svg{width:50px;height:50px;stroke:var(--border);margin:0 auto 14px}
+.empty h4{font-size:0.95rem;color:var(--text);margin-bottom:5px;font-weight:600}
+.empty p{font-size:0.82rem}
+
+/* Notifications */
+.notifs{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.notif{display:flex;align-items:center;gap:10px;background:white;border-radius:12px;padding:12px 16px;box-shadow:var(--shadow-lg);border-left:4px solid var(--g3);max-width:300px;animation:nSlide 0.3s ease;font-size:0.82rem;font-weight:500;color:var(--g1)}
+.notif.err{border-color:var(--red)}
+.notif svg{width:16px;height:16px;flex-shrink:0}
+@keyframes nSlide{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+
+/* Settings */
+.sets-grid{display:grid;grid-template-columns:200px 1fr;gap:20px}
+.sets-nav{background:white;border-radius:var(--r);border:1px solid var(--border);overflow:hidden;height:fit-content}
+.sets-ni{padding:11px 16px;font-size:0.83rem;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:1px solid var(--border);transition:var(--t)}
+.sets-ni:last-child{border-bottom:none}
+.sets-ni.active,.sets-ni:hover{background:var(--cream);color:var(--g2);font-weight:600}
+.sets-panel{background:white;border-radius:var(--r);border:1px solid var(--border);padding:24px}
+.sets-panel h3{font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:800;color:var(--g1);margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+
+/* Report bars */
+.rbar{margin-bottom:14px}
+.rbar-top{display:flex;justify-content:space-between;margin-bottom:5px}
+.rbar-top span{font-size:0.82rem;font-weight:600;color:var(--g1)}
+.rbar-top em{font-style:normal;font-size:0.78rem;color:var(--muted)}
+
+/* Doc grid */
+.doc-card{background:white;border-radius:var(--r);border:1px solid var(--border);padding:16px;cursor:pointer;transition:var(--t)}
+.doc-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+
+@media(max-width:1100px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.sidebar{display:none}.stats-row{grid-template-columns:1fr 1fr}}
+@media print{.sidebar,.topbar,.notifs,.btn,.mo,.pg-hdr-actions,.filter-bar{display:none!important}.main{overflow:visible}.content{overflow:visible;padding:0}.page{display:block!important}body{overflow:visible;display:block}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-logo" onclick="showPage('dashboard')">
+    <img src="CAMPANIES_LOGO.png" alt="Exprove"
+      onerror="this.style.display='none';this.nextElementSibling.style.display='block'"/>
+    <div class="brand-text">EXPROVE</div>
+    <div class="tagline">Client Management System</div>
+  </div>
+  <div class="sb-sec">Main</div>
+  <button class="nav-btn active" data-page="dashboard" onclick="showPage('dashboard',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard
+  </button>
+  <button class="nav-btn" data-page="clients" onclick="showPage('clients',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Clients
+    <span class="nb" id="nb-clients">0</span>
+  </button>
+  <button class="nav-btn" data-page="applications" onclick="showPage('applications',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Applications
+    <span class="nb" id="nb-apps">0</span>
+  </button>
+  <button class="nav-btn" data-page="documents" onclick="showPage('documents',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Documents
+  </button>
+  <div class="sb-sec">Tracking</div>
+  <button class="nav-btn" data-page="tracker" onclick="showPage('tracker',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Status Tracker
+  </button>
+  <button class="nav-btn" data-page="reports" onclick="showPage('reports',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports
+  </button>
+  <button class="nav-btn" data-page="invoices" onclick="showPage('invoices',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="13" y2="16"/></svg>Invoices
+  </button>
+  <div class="sb-sec">System</div>
+  <button class="nav-btn" data-page="settings" onclick="showPage('settings',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 0-14.14 0M4.93 19.07a10 10 0 0 0 14.14 0M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>Settings
+  </button>
+  <div class="sb-bottom">
+    <div class="sb-user">
+      <div class="sb-av" id="sb-av">MA</div>
+      <div><span class="sb-uname" id="sb-uname">Michael Antwi</span><span class="sb-urole">Administrator</span></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+    <div id="storage-banner" style="display:none;background:#fff3cd;color:#856404;padding:8px 16px;font-size:0.78rem;align-items:center;gap:8px;border-bottom:1px solid #ffc107;position:fixed;top:0;left:0;right:0;z-index:9999;flex-wrap:wrap"></div>
+  <div class="topbar">
+    <div><span class="tb-title" id="pg-title">Dashboard</span><span class="tb-sub" id="pg-sub">— Overview</span></div>
+    <div class="tb-right">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search clients…" id="gsearch" oninput="doSearch(this.value)"/>
+      </div>
+      <span class="tb-date" id="tb-date"></span>
+      <button class="btn btn-primary" onclick="openAddClient()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Client
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-row">
+        <div class="scard" style="--ac:var(--g3);--ac-bg:#e8f5e9">
+          <div class="scard-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <h3 id="s-total">0</h3><p>Total Clients</p><div class="scard-ch">All time</div>
+        </div>
+        <div class="scard" style="--ac:#e67e22;--ac-bg:#fff8e1">
+          <div class="scard-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <h3 id="s-pending">0</h3><p>Pending</p><div class="scard-ch" style="color:#e67e22">Awaiting action</div>
+        </div>
+        <div class="scard" style="--ac:var(--blue);--ac-bg:var(--blue-bg)">
+          <div class="scard-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+          <h3 id="s-inprog">0</h3><p>In Progress</p><div class="scard-ch" style="color:var(--blue)">Being processed</div>
+        </div>
+        <div class="scard" style="--ac:var(--gold);--ac-bg:#fffde7">
+          <div class="scard-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <h3 id="s-done">0</h3><p>Completed</p><div class="scard-ch" style="color:#a08530">Successfully done</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:16px">
+        <div class="card">
+          <div class="card-hdr"><h4>Recent Clients</h4><button class="btn btn-outline btn-sm" onclick="showPage('clients')">View All</button></div>
+          <div class="tbl-wrap"><table><thead><tr><th>Client</th><th>Service</th><th>Status</th><th>Payment</th><th>Date</th></tr></thead><tbody id="dash-tbody"></tbody></table></div>
+        </div>
+        <div class="card"><div class="card-hdr"><h4>Recent Activity</h4><button class="btn btn-ghost btn-sm" onclick="clearActivity()" title="Clear activity log" style="font-size:0.72rem;padding:4px 10px;color:var(--red)">Clear</button></div><div id="act-feed"></div></div>
+      </div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div class="page" id="page-clients">
+      <div class="pg-hdr">
+        <div><h2>All Clients</h2><p>Manage and track all your client files</p></div>
+        <div class="pg-hdr-actions">
+          <button class="btn btn-outline" onclick="exportCSV()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button>
+          <button class="btn btn-primary" onclick="openAddClient()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Client</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <div class="fchip active" onclick="setFilter('all',this)">All</div>
+        <div class="fchip" onclick="setFilter('pending',this)">Pending</div>
+        <div class="fchip" onclick="setFilter('processing',this)">In Progress</div>
+        <div class="fchip" onclick="setFilter('completed',this)">Completed</div>
+        <div class="fchip" onclick="setFilter('rejected',this)">Rejected</div>
+        <div class="fchip" onclick="setFilter('passport',this)">🛂 Passport</div>
+        <div class="fchip" onclick="setFilter('birth',this)">📄 Birth Cert</div>
+      </div>
+      <div class="clients-grid" id="clients-grid"></div>
+    </div>
+
+    <!-- APPLICATIONS -->
+    <div class="page" id="page-applications">
+      <div class="pg-hdr"><div><h2>Applications</h2><p>All passport and birth certificate applications</p></div></div>
+      <div class="card">
+        <div class="card-hdr"><h4>Application Log</h4></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Ref #</th><th>Client</th><th>Type</th><th>Status</th><th>Fee</th><th>Payment</th><th>Progress</th><th>Date</th><th>Actions</th></tr></thead><tbody id="apps-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- DOCUMENTS -->
+    <div class="page" id="page-documents">
+      <div class="pg-hdr">
+        <div><h2>Documents</h2><p>Client documents organised by folder</p></div>
+        <div class="pg-hdr-actions">
+          <div id="doc-view-toggle" style="display:flex;gap:4px;background:white;border:1.5px solid var(--border);border-radius:50px;padding:3px">
+            <button id="dvt-folders" class="btn btn-sm btn-primary" style="border-radius:50px;padding:5px 14px" onclick="setDocView('folders',this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="13" height="13"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Folders
+            </button>
+            <button id="dvt-all" class="btn btn-sm btn-ghost" style="border-radius:50px;padding:5px 14px" onclick="setDocView('all',this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="13" height="13"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>All Files
+            </button>
+          </div>
+          <button class="btn btn-primary" onclick="document.getElementById('gfile').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload Document</button>
+          <input type="file" id="gfile" style="display:none" multiple onchange="globalUpload(this)"/>
+        </div>
+      </div>
+      <div id="docs-grid"></div>
+    </div>
+
+    <!-- INVOICES -->
+    <div class="page" id="page-invoices">
+      <div class="pg-hdr">
+        <div><h2>Invoices</h2><p>Create and manage client invoices</p></div>
+        <div class="pg-hdr-actions">
+          <button class="btn btn-primary" onclick="openNewInvoice()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Invoice
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h4>Invoice History</h4><span id="inv-count" style="font-size:0.75rem;color:var(--muted)">0 invoices</span></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Invoice #</th><th>Client</th><th>Service</th><th>Amount (GHS)</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="inv-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRACKER -->
+    <div class="page" id="page-tracker">
+      <div class="pg-hdr"><div><h2>Status Tracker</h2><p>Real-time progress for all active applications</p></div></div>
+      <div id="tracker-list"></div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="page" id="page-reports">
+      <div class="pg-hdr">
+        <div><h2>Reports</h2><p>Business performance summary</p></div>
+        <div class="pg-hdr-actions">
+          <button class="btn btn-outline" onclick="window.print()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print</button>
+          <button class="btn btn-outline" onclick="exportCSV()">Export CSV</button>
+        </div>
+      </div>
+      <div class="stats-row" style="margin-bottom:20px">
+        <div class="scard" style="--ac:var(--g3);--ac-bg:#e8f5e9"><div class="scard-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><h3 id="r-total">0</h3><p>Total Clients</p></div>
+        <div class="scard" style="--ac:var(--gold);--ac-bg:#fffde7"><div class="scard-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="2" width="16" height="20" rx="2"/></svg></div><h3 id="r-passport">0</h3><p>Passport Services</p></div>
+        <div class="scard" style="--ac:var(--purple);--ac-bg:var(--purple-bg)"><div class="scard-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div><h3 id="r-birth">0</h3><p>Birth Certificates</p></div>
+        <div class="scard" style="--ac:var(--g3);--ac-bg:#e8f5e9"><div class="scard-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></div><h3 id="r-done">0</h3><p>Completed</p></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card"><div class="card-hdr"><h4>By Service Type</h4></div><div style="padding:20px" id="r-service"></div></div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="card"><div class="card-hdr"><h4>By Status</h4></div><div style="padding:20px" id="r-status"></div></div>
+          <div class="card"><div class="card-hdr"><h4>Payment Summary</h4></div><div style="padding:20px" id="r-payment"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="pg-hdr"><div><h2>Settings</h2><p>System preferences and company information</p></div></div>
+      <div class="sets-grid">
+        <div class="sets-nav">
+          <div class="sets-ni active" onclick="setTab(this,'st-company')">Company Info</div>
+          <div class="sets-ni" onclick="setTab(this,'st-data')">Data & Backup</div>
+          <div class="sets-ni" onclick="setTab(this,'st-profile')">My Profile</div>
+        </div>
+        <div class="sets-panel">
+          <div id="st-company">
+            <h3>Company Information</h3>
+            <div class="fgrid">
+              <div class="fg"><label>Company Name</label><input id="st-cname" value="Exprove Passport Limited"/></div>
+              <div class="fg"><label>Phone</label><input id="st-cphone" value="0500639478"/></div>
+              <div class="fg full"><label>Email</label><input id="st-cemail" value="michaelattaantwi5213@gmail.com"/></div>
+              <div class="fg full"><label>Address</label><input id="st-caddr" value="Accra, Greater Accra Region, Ghana"/></div>
+              <div class="fg full"><label>WhatsApp Number (with country code)</label><input id="st-cwa" value="+233500639478" placeholder="+233XXXXXXXXX"/></div>
+            </div>
+            <button class="btn btn-primary" style="margin-top:12px" onclick="saveSettings()">Save Settings</button>
+          </div>
+          <div id="st-data" style="display:none">
+            <h3>Data Management</h3>
+            <p style="font-size:0.85rem;color:var(--muted);margin-bottom:18px">All data stored securely in your browser. Export regularly to back up.</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-outline" onclick="exportCSV()">📥 Export Clients (CSV)</button>
+              <button class="btn btn-outline" onclick="exportJSON()">📦 Full Backup (JSON)</button>
+              <button class="btn btn-ghost" onclick="importJSON()">📤 Import Backup</button>
+              <input type="file" id="import-file" style="display:none" accept=".json" onchange="doImport(this)"/>
+            </div>
+            <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
+              <p style="font-size:0.82rem;color:var(--red);font-weight:600;margin-bottom:10px">⚠ Danger Zone</p>
+              <button class="btn btn-danger" onclick="clearAll()">🗑 Delete All Data</button>
+            </div>
+          </div>
+          <div id="st-profile" style="display:none">
+            <h3>My Profile</h3>
+            <div class="fgrid">
+              <div class="fg"><label>Your Name</label><input id="st-uname" value="Michael Antwi"/></div>
+              <div class="fg"><label>Role</label><input value="Administrator" readonly style="background:#f0f0f0;color:#999"/></div>
+            </div>
+            <button class="btn btn-primary" style="margin-top:12px" onclick="saveProfile()">Save Profile</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: ADD/EDIT CLIENT -->
+<div class="mo" id="mo-client">
+  <div class="mo-box">
+    <div class="mo-hdr">
+      <h3 id="mo-title">Add New Client</h3>
+      <button class="mo-close" onclick="closeMo('mo-client')">✕</button>
+    </div>
+    <div class="mo-body">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+        <div class="photo-upload" onclick="document.getElementById('photo-input').click()" title="Click to add client photo">
+          <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="loadPhoto(this)"/>
+          <img id="photo-preview" src="" alt=""/>
+          <svg id="photo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div><p style="font-size:0.82rem;font-weight:600;color:var(--g1)">Client Photo</p><p style="font-size:0.75rem;color:var(--muted)">Click to upload passport-size photo (optional)</p></div>
+      </div>
+      <div class="fsec"><div class="fsec-title">Personal Information</div></div>
+      <div class="fgrid">
+        <div class="fg"><label>First Name *</label><input id="c-fn" placeholder="e.g. Kwame"/></div>
+        <div class="fg"><label>Last Name *</label><input id="c-ln" placeholder="e.g. Mensah"/></div>
+        <div class="fg"><label>Phone Number *</label><input id="c-ph" placeholder="0244 000 000"/></div>
+        <div class="fg"><label>Email Address</label><input id="c-em" type="email" placeholder="email@example.com"/></div>
+        <div class="fg"><label>Date of Birth</label><input id="c-db" type="date"/></div>
+        <div class="fg"><label>Ghana Card / ID Number</label><input id="c-gi" placeholder="GHA-XXXXXXXXX-X"/></div>
+        <div class="fg full"><label>Home Address / Town</label><input id="c-ad" placeholder="e.g. Kumasi, Ashanti Region"/></div>
+        <div class="fg"><label>Nationality</label><input id="c-na" value="Ghanaian"/></div>
+        <div class="fg"><label>Occupation</label><input id="c-oc" placeholder="e.g. Teacher"/></div>
+      </div>
+      <div class="fsec" style="margin-top:18px"><div class="fsec-title">Service & Application</div></div>
+      <div class="fgrid">
+        <div class="fg"><label>Service Type *</label>
+          <select id="c-sv">
+            <option value="">Select service…</option>
+            <option value="passport-new">🛂 New Passport Application</option>
+            <option value="passport-renewal">🔄 Passport Renewal</option>
+            <option value="birth-cert">📄 Birth Certificate</option>
+            <option value="document-check">✅ Document Check</option>
+            <option value="appointment">📅 Appointment Booking</option>
+            <option value="travel">✈ Travel Advisory</option>
+          </select>
+        </div>
+        <div class="fg"><label>Application Status</label>
+          <select id="c-st">
+            <option value="pending">⏳ Pending</option>
+            <option value="processing">🔄 In Progress</option>
+            <option value="review">🔍 Under Review</option>
+            <option value="approved">✅ Approved</option>
+            <option value="completed">🏁 Completed</option>
+            <option value="rejected">❌ Rejected</option>
+          </select>
+        </div>
+        <div class="fg"><label>Application Fee (GHS)</label><input id="c-fe" type="number" placeholder="0.00" min="0" step="0.01"/></div>
+        <div class="fg"><label>Payment Status</label>
+          <select id="c-py">
+            <option value="unpaid">❌ Unpaid</option>
+            <option value="partial">⏳ Partial Payment</option>
+            <option value="paid">✅ Fully Paid</option>
+          </select>
+        </div>
+        <div class="fg"><label>Amount Paid (GHS)</label><input id="c-ap" type="number" placeholder="0.00" min="0" step="0.01"/></div>
+        <div class="fg"><label>Expected Completion</label><input id="c-cd" type="date"/></div>
+        <div class="fg full"><label>Notes / Remarks</label><textarea id="c-no" placeholder="Any important notes, special requirements, or remarks…"></textarea></div>
+      </div>
+      <div class="fsec" style="margin-top:18px"><div class="fsec-title">Upload Documents from PC</div></div>
+      <div class="file-drop" id="file-drop">
+        <input type="file" multiple id="file-input" onchange="pickFiles(this)"/>
+        <div class="fdi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+        <p><strong>Click to upload</strong> or drag &amp; drop files here</p>
+        <p style="font-size:0.72rem;margin-top:3px">Passport copy · Birth certificate · Ghana card · Photos · Any document</p>
+      </div>
+      <div class="fl" id="file-list"></div>
+    </div>
+    <div class="mo-foot">
+      <button class="btn btn-ghost" onclick="closeMo('mo-client')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveClient()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Save Client</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: VIEW CLIENT -->
+<div class="mo" id="mo-view">
+  <div class="mo-box" style="max-width:800px">
+    <div class="mo-hdr">
+      <h3 id="view-title">Client File</h3>
+      <button class="mo-close" onclick="closeMo('mo-view')">✕</button>
+    </div>
+    <div class="mo-body" id="view-body"></div>
+    <div class="mo-foot">
+      <button class="btn btn-danger btn-sm" id="view-del">🗑 Delete</button>
+      <button class="btn btn-ghost btn-sm" id="view-print">🖨 Print File</button>
+      <button class="btn btn-outline btn-sm" id="view-invoice">📄 Invoice</button>
+      <button class="btn btn-wa btn-sm" id="view-wa">
+        <svg viewBox="0 0 24 24" fill="white" width="14" height="14"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp
+      </button>
+      <button class="btn btn-outline btn-sm" onclick="closeMo('mo-view')">Close</button>
+      <button class="btn btn-primary btn-sm" id="view-edit">✏ Edit</button>
+    </div>
+  </div>
+</div>
+
+<div class="notifs" id="notif-wrap"></div>
+
+<!-- MODAL: INVOICE -->
+<div class="mo" id="mo-invoice">
+  <div class="mo-box" style="max-width:750px">
+    <div class="mo-hdr">
+      <h3 id="inv-mo-title">New Invoice</h3>
+      <button class="mo-close" onclick="closeMo('mo-invoice')">✕</button>
+    </div>
+    <div class="mo-body">
+      <div class="fgrid">
+        <div class="fg">
+          <label>Select Client *</label>
+          <select id="inv-client" onchange="fillInvoiceFromClient(this.value)">
+            <option value="">— Choose a client —</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Invoice Date *</label>
+          <input type="date" id="inv-date"/>
+        </div>
+        <div class="fg">
+          <label>Due Date</label>
+          <input type="date" id="inv-due"/>
+        </div>
+        <div class="fg">
+          <label>Payment Status</label>
+          <select id="inv-status">
+            <option value="unpaid">❌ Unpaid</option>
+            <option value="partial">⏳ Partial</option>
+            <option value="paid">✅ Paid</option>
+          </select>
+        </div>
+      </div>
+      <div class="fsec" style="margin-top:10px"><div class="fsec-title">Invoice Items</div></div>
+      <div id="inv-items-wrap">
+        <div style="display:grid;grid-template-columns:1fr 90px 90px 40px;gap:8px;margin-bottom:6px">
+          <span style="font-size:0.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Description</span>
+          <span style="font-size:0.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Qty</span>
+          <span style="font-size:0.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Unit Price</span>
+          <span></span>
+        </div>
+        <div id="inv-items"></div>
+      </div>
+      <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="addInvItem()">+ Add Item</button>
+      <div style="margin-top:16px;padding:14px 16px;background:var(--cream);border-radius:var(--rsm);display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+        <div style="display:flex;gap:20px;font-size:0.83rem"><span style="color:var(--muted)">Subtotal:</span><span id="inv-subtotal" style="font-weight:600;min-width:80px;text-align:right">GHS 0.00</span></div>
+        <div style="display:flex;gap:20px;font-size:0.83rem"><span style="color:var(--muted)">Tax (0%):</span><span id="inv-tax" style="font-weight:600;min-width:80px;text-align:right">GHS 0.00</span></div>
+        <div style="display:flex;gap:20px;font-size:1rem;border-top:1px solid var(--border);padding-top:6px;margin-top:4px"><span style="color:var(--g1);font-weight:700">TOTAL:</span><span id="inv-total" style="font-weight:800;color:var(--g2);min-width:80px;text-align:right">GHS 0.00</span></div>
+      </div>
+      <div class="fg" style="margin-top:14px"><label>Notes / Payment Instructions</label><textarea id="inv-notes" rows="2" placeholder="e.g. Payment via MoMo 0500639478 (Exprove Passport Ltd)"></textarea></div>
+    </div>
+    <div class="mo-foot">
+      <button class="btn btn-ghost" onclick="closeMo('mo-invoice')">Cancel</button>
+      <button class="btn btn-outline" onclick="saveAndPrintInvoice()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="15" height="15"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Save & Print
+      </button>
+      <button class="btn btn-primary" onclick="saveInvoice()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><polyline points="20 6 9 17 4 12"/></svg>Save Invoice
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  EXPROVE STORAGE ENGINE v3
+//  Strategy: ALWAYS write to BOTH localStorage AND IndexedDB.
+//  On startup, IDB is loaded first (async), then LS is merged.
+//  This means data survives even if one layer fails.
+// ══════════════════════════════════════════════════════════════
+const KEYS = ['exp_clients','exp_gdocs','exp_activity','exp_settings','exp_invoices'];
+
+const DB = {
+  _mem: {},
+
+  // ── localStorage helpers (sync, fast) ──
+  _lsGet(k){
+    try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){ return null; }
+  },
+  _lsSet(k,v){
+    try{ localStorage.setItem(k,JSON.stringify(v)); return true; }catch(e){ return false; }
+  },
+  _lsDel(k){
+    try{ localStorage.removeItem(k); }catch(e){}
+  },
+
+  // ── Public API ──
+  get(k){
+    // 1. Try localStorage first (fastest)
+    const lv = this._lsGet(k);
+    if(lv !== null) return lv;
+    // 2. Fall back to memory (populated from IDB on startup)
+    return this._mem[k] !== undefined ? this._mem[k] : null;
+  },
+
+  set(k, v){
+    // Write to BOTH localStorage and IndexedDB every time
+    this._mem[k] = v;
+    this._lsSet(k, v);
+    this._idbSet(k, JSON.stringify(v));
+  },
+
+  remove(k){
+    delete this._mem[k];
+    this._lsDel(k);
+    this._idbDel(k);
+  },
+
+  // ── IndexedDB ──
+  _db: null,
+
+  _idbOpen(){
+    return new Promise((resolve, reject)=>{
+      try{
+        const req = indexedDB.open('ExproveDB_v3', 1);
+        req.onupgradeneeded = e => {
+          const db = e.target.result;
+          if(!db.objectStoreNames.contains('data')) db.createObjectStore('data');
+        };
+        req.onsuccess = e => { this._db = e.target.result; resolve(this._db); };
+        req.onerror   = e => reject(e);
+      } catch(e){ reject(e); }
+    });
+  },
+
+  _idbSet(k, serialized){
+    if(!this._db) return;
+    try{
+      const tx = this._db.transaction('data','readwrite');
+      tx.objectStore('data').put(serialized, k);
+    }catch(e){}
+  },
+
+  _idbDel(k){
+    if(!this._db) return;
+    try{
+      const tx = this._db.transaction('data','readwrite');
+      tx.objectStore('data').delete(k);
+    }catch(e){}
+  },
+
+  _idbGetAll(){
+    // Returns a Promise<{key: parsedValue}>
+    return new Promise((resolve)=>{
+      if(!this._db){ resolve({}); return; }
+      try{
+        const result = {};
+        const tx = this._db.transaction('data','readonly');
+        const store = tx.objectStore('data');
+        const req = store.openCursor();
+        req.onsuccess = e => {
+          const cursor = e.target.result;
+          if(cursor){
+            try{ result[cursor.key] = JSON.parse(cursor.value); }catch(ex){}
+            cursor.continue();
+          }
+        };
+        tx.oncomplete = () => resolve(result);
+        tx.onerror    = () => resolve(result);
+      }catch(e){ resolve({}); }
+    });
+  },
+
+  // ── Boot: open IDB, load everything, then sync back to LS ──
+  async boot(){
+    try{ await this._idbOpen(); }catch(e){ /* IDB unavailable, LS-only mode */ }
+
+    const idbData = await this._idbGetAll();
+
+    KEYS.forEach(k => {
+      const lsVal  = this._lsGet(k);
+      const idbVal = idbData[k] !== undefined ? idbData[k] : null;
+
+      if(lsVal !== null){
+        // localStorage has data — trust it, backfill IDB if needed
+        this._mem[k] = lsVal;
+        if(idbVal === null) this._idbSet(k, JSON.stringify(lsVal));
+      } else if(idbVal !== null){
+        // Only IDB has data — restore into localStorage and memory
+        this._mem[k] = idbVal;
+        this._lsSet(k, idbVal);
+      }
+      // else: neither has data — stays null/default
+    });
+
+    return idbData; // caller can inspect if needed
+  }
+};
+
+// ── Boot the storage engine BEFORE reading any state ──
+// We use a self-invoking async block and defer UI init until ready.
+const DEFAULT_SETTINGS = {
+  cname:'Exprove Passport Limited', cphone:'0500639478',
+  cemail:'michaelattaantwi5213@gmail.com', caddr:'Accra, Greater Accra Region, Ghana',
+  cwa:'+233500639478', uname:'Michael Antwi'
+};
+
+let clients  = [];
+let gdocs    = [];
+let activity = [];
+let settings = {...DEFAULT_SETTINGS};
+let invoices = [];
+let editId=null, pendFiles=[], pendPhoto=null, curFilter='all', curSearch='';
+
+// Boot runs first; DOMContentLoaded handler waits for it
+let _bootDone = false;
+DB.boot().then(()=>{
+  clients  = DB.get('exp_clients')  || [];
+  gdocs    = DB.get('exp_gdocs')    || [];
+  activity = DB.get('exp_activity') || [];
+  invoices = DB.get('exp_invoices') || [];
+  const saved = DB.get('exp_settings');
+  if(saved) settings = {...DEFAULT_SETTINGS, ...saved};
+  _bootDone = true;
+  if(_domReady) initApp();
+}).catch(()=>{
+  // Fallback: load from LS only
+  clients  = DB._lsGet('exp_clients')  || [];
+  gdocs    = DB._lsGet('exp_gdocs')    || [];
+  activity = DB._lsGet('exp_activity') || [];
+  invoices = DB._lsGet('exp_invoices') || [];
+  const saved = DB._lsGet('exp_settings');
+  if(saved) settings = {...DEFAULT_SETTINGS, ...saved};
+  _bootDone = true;
+  if(_domReady) initApp();
+});
+
+let _domReady = false;
+document.addEventListener('DOMContentLoaded',()=>{
+  _domReady = true;
+  if(_bootDone) initApp();
+});
+
+function initApp(){
+  document.getElementById('tb-date').textContent=new Date().toLocaleDateString('en-GH',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  applySettings(); refreshAll(); initDrop();
+
+  // ── STORAGE STATUS BANNER ──
+  const banner = document.getElementById('storage-banner');
+  let lsOk = false;
+  try{ localStorage.setItem('_t','1'); localStorage.removeItem('_t'); lsOk=true; }catch(e){}
+  if(!lsOk && !DB._db){
+    if(banner){
+      banner.style.display='flex';
+      const closeBtn=document.createElement('button');
+      closeBtn.textContent='✕';
+      closeBtn.style.cssText='margin-left:auto;background:none;border:none;cursor:pointer;font-size:1rem;color:inherit';
+      closeBtn.onclick=()=>{ banner.style.display='none'; };
+      banner.innerHTML='⚠️ <strong>Storage Warning:</strong> Both localStorage and IndexedDB are unavailable. Data will not persist. Try opening in Chrome or Edge. ';
+      banner.appendChild(closeBtn);
+    }
+  } else if(banner){
+    banner.style.display='none';
+  }
+
+  // ── AUTO-SAVE every 20 seconds (dual-write) ──
+  setInterval(saveAll, 20000);
+
+  // ── Save before tab closes ──
+  window.addEventListener('beforeunload', saveAll);
+
+  // ── Save immediately after any user interaction (debounced) ──
+  let _saveTimer = null;
+  document.addEventListener('click', ()=>{ clearTimeout(_saveTimer); _saveTimer=setTimeout(saveAll, 800); });
+}
+
+function saveAll(){
+  DB.set('exp_clients',  clients);
+  DB.set('exp_gdocs',    gdocs);
+  DB.set('exp_activity', activity);
+  DB.set('exp_settings', settings);
+  DB.set('exp_invoices', invoices);
+}
+
+
+function applySettings(){
+  document.getElementById('sb-uname').textContent=settings.uname||'Admin';
+  document.getElementById('sb-av').textContent=(settings.uname||'MA').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  ['cname','cphone','cemail','caddr','cwa'].forEach(k=>{const el=document.getElementById('st-'+k);if(el)el.value=settings[k]||'';});
+  const u=document.getElementById('st-uname');if(u)u.value=settings.uname||'';
+}
+
+function refreshAll(){
+  const t=clients.length,p=clients.filter(c=>c.status==='pending').length,
+        i=clients.filter(c=>['processing','review'].includes(c.status)).length,
+        d=clients.filter(c=>['completed','approved'].includes(c.status)).length;
+  ['s-total','s-pending','s-inprog','s-done'].forEach((id,idx)=>{const el=document.getElementById(id);if(el)el.textContent=[t,p,i,d][idx];});
+  document.getElementById('nb-clients').textContent=t;
+  document.getElementById('nb-apps').textContent=t;
+  renderDash(); renderActivity(); renderClients(); renderApps(); renderDocs(); renderTracker(); renderReports(); renderInvoices();
+}
+
+// ── NAVIGATION ──
+const pgMeta={dashboard:{t:'Dashboard',s:'Overview'},clients:{t:'Clients',s:'All client records'},applications:{t:'Applications',s:'All applications'},documents:{t:'Documents',s:'Client document folders'},tracker:{t:'Status Tracker',s:'Application progress'},reports:{t:'Reports',s:'Business summary'},invoices:{t:'Invoices',s:'Create & manage invoices'},settings:{t:'Settings',s:'System preferences'}};
+
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const pg=document.getElementById('page-'+id);if(pg)pg.classList.add('active');
+  if(btn)btn.classList.add('active');
+  else{const b=document.querySelector('[data-page="'+id+'"]');if(b)b.classList.add('active');}
+  const m=pgMeta[id]||{t:id,s:''};
+  document.getElementById('pg-title').textContent=m.t;
+  document.getElementById('pg-sub').textContent='— '+m.s;
+}
+
+// ── DASHBOARD ──
+function renderDash(){
+  const tbody=document.getElementById('dash-tbody');
+  const list=[...clients].reverse().slice(0,7);
+  if(!list.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:28px">No clients yet — click &quot;New Client&quot; to get started!</td></tr>';return;}
+  // Build rows with data-id attribute — avoids onclick quoting issues inside innerHTML
+  tbody.innerHTML=list.map(c=>`<tr class="dash-row" data-id="${c.id}" style="cursor:pointer"><td><div class="td-name">${c.fn} ${c.ln}</div><div class="td-id">EXP-${c.id.slice(-6).toUpperCase()}</div></td><td style="font-size:0.8rem">${svcLabel(c.sv)}</td><td>${mkBadge(c.status)}</td><td style="font-size:0.8rem">${pyLabel(c.py)}</td><td style="font-size:0.75rem;color:var(--muted)">${fmtDate(c.created)}</td><td><button class="btn btn-outline btn-xs">View</button></td></tr>`).join('');
+  // Attach event listeners after DOM is ready
+  tbody.querySelectorAll('.dash-row').forEach(row=>{
+    row.addEventListener('click', function(){ viewClient(this.getAttribute('data-id')); });
+  });
+}
+
+// ── ACTIVITY ──
+function addAct(text,type){activity.unshift({text,type,t:new Date().toISOString()});if(activity.length>30)activity.pop();saveAll();renderActivity();}
+function clearActivity(){if(!confirm('Clear all recent activity?'))return;activity=[];saveAll();renderActivity();notify('Activity cleared.');}
+function renderActivity(){
+  const feed=document.getElementById('act-feed');
+  const cm={add:{bg:'#e8f5e9',ic:'#2d7a3e',d:'M12 5v14M5 12h14'},edit:{bg:'#e3f2fd',ic:'#2471a3',d:'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'},del:{bg:'#fdecea',ic:'#c0392b',d:'M18 6 6 18M6 6l12 12'},upd:{bg:'#fff8e1',ic:'#e67e22',d:'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'}};
+  if(!activity.length){feed.innerHTML='<div class="act-item"><div class="act-text"><strong>No recent activity</strong><span>Actions will appear here</span></div></div>';return;}
+  feed.innerHTML=activity.slice(0,8).map(a=>{const c=cm[a.type]||cm.upd;return`<div class="act-item"><div class="act-dot" style="background:${c.bg}"><svg viewBox="0 0 24 24" fill="none" stroke="${c.ic}" stroke-width="2.5"><path d="${c.d}"/></svg></div><div class="act-text"><strong>${a.text}</strong><span>${timeAgo(a.t)}</span></div></div>`;}).join('');
+}
+
+// ── CLIENTS ──
+function renderClients(){
+  const grid=document.getElementById('clients-grid');
+  let list=[...clients].reverse();
+  if(curFilter!=='all'){
+    if(curFilter==='passport')list=list.filter(c=>c.sv&&c.sv.startsWith('passport'));
+    else if(curFilter==='birth')list=list.filter(c=>c.sv==='birth-cert');
+    else list=list.filter(c=>c.status===curFilter||(curFilter==='processing'&&c.status==='review'));
+  }
+  if(curSearch){const q=curSearch.toLowerCase();list=list.filter(c=>(`${c.fn} ${c.ln}`).toLowerCase().includes(q)||(c.ph||'').includes(q)||(c.em||'').toLowerCase().includes(q)||(c.gi||'').toLowerCase().includes(q));}
+  if(!list.length){grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><h4>No clients found</h4><p>${curFilter==='all'?'Click "Add Client" to get started':'Try a different filter'}</p></div>`;return;}
+  grid.innerHTML=list.map(c=>`<div class="cc dash-client" data-id="${c.id}"><div class="cc-top"><div class="cc-av">${c.photo?`<img src="${c.photo}"/>`:(c.fn[0]||'').toUpperCase()+(c.ln[0]||'').toUpperCase()}</div><div style="flex:1;min-width:0"><div class="cc-name">${c.fn} ${c.ln}</div><div class="cc-id">EXP-${c.id.slice(-6).toUpperCase()}</div></div>${mkBadge(c.status)}</div><div class="cc-meta"><div class="cc-mi"><label>Service</label><span>${svcLabel(c.sv)}</span></div><div class="cc-mi"><label>Payment</label><span>${pyLabel(c.py)}</span></div><div class="cc-mi"><label>Phone</label><span>${c.ph||'—'}</span></div><div class="cc-mi"><label>Added</label><span>${fmtDate(c.created)}</span></div></div>${c.no?`<div style="margin-top:9px;font-size:0.75rem;color:var(--muted);background:var(--cream);padding:7px 10px;border-radius:6px">${c.no.slice(0,80)}${c.no.length>80?'…':''}</div>`:''}<div class="cc-foot"><span style="font-size:0.72rem;color:var(--muted)">${(c.files||[]).length} doc(s)</span><div style="display:flex;gap:5px" onclick="event.stopPropagation()"><button data-wa="${c.id}" class="btn btn-wa btn-xs cc-wa">WA</button><button data-edit="${c.id}" class="btn btn-outline btn-xs cc-edit">Edit</button><button data-del="${c.id}" class="btn btn-danger btn-xs cc-del">Del</button></div></div></div>`).join('');
+  // Attach click listeners after render
+  grid.querySelectorAll('.dash-client').forEach(card=>{
+    card.addEventListener('click', function(e){
+      if(!e.target.closest('button')) viewClient(this.getAttribute('data-id'));
+    });
+  });
+}
+function setFilter(f,el){curFilter=f;document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderClients();}
+function doSearch(v){curSearch=v;renderClients();}
+
+// ── VIEW CLIENT ──
+function viewClient(id){
+  const c=clients.find(x=>x.id===id);if(!c)return;
+  const stages=['pending','processing','review','approved','completed'],si=stages.indexOf(c.status);
+  const pct={pending:10,processing:40,review:65,approved:85,completed:100,rejected:0};
+  document.getElementById('view-title').textContent=`${c.fn} ${c.ln} · EXP-${c.id.slice(-6).toUpperCase()}`;
+  document.getElementById('view-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:${c.photo?'80px ':''} 1fr 1fr;gap:20px;margin-bottom:20px">
+      ${c.photo?`<img src="${c.photo}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--border)"/>`:''}
+      <div>${ir('Name',c.fn+' '+c.ln)}${ir('Phone',c.ph)}${ir('Email',c.em||'—')}${ir('DOB',c.db||'—')}${ir('ID',c.gi||'—')}${ir('Nationality',c.na||'—')}${ir('Occupation',c.oc||'—')}${ir('Address',c.ad||'—')}</div>
+      <div>${ir('Service',svcLabel(c.sv))}${ir('Status',mkBadge(c.status))}${ir('Fee',c.fe?'GHS '+parseFloat(c.fe).toFixed(2):'—')}${ir('Paid',c.ap?'GHS '+parseFloat(c.ap).toFixed(2):'—')}${ir('Payment',pyLabel(c.py))}${ir('Added',fmtDate(c.created))}${ir('Expected',c.cd?fmtDate(c.cd):'—')}${c.no?ir('Notes',c.no):''}</div>
+    </div>
+    <div style="margin-bottom:20px">
+      <div class="fsec-title" style="margin-bottom:10px">Progress — ${pct[c.status]||0}%</div>
+      <div class="prog" style="height:8px;margin-bottom:14px"><div class="prog-f" style="width:${pct[c.status]||0}%"></div></div>
+      <div style="display:flex;align-items:flex-start">
+        ${stages.map((s,i)=>`<div class="tr-step"><div class="tr-circ ${i<si?'done':i===si?'active':'wait'}">${i<si?'✓':i+1}</div><div class="tr-lbl">${s.charAt(0).toUpperCase()+s.slice(1)}</div></div>${i<stages.length-1?`<div class="tr-line ${i<si?'done':''}" style="margin-top:17px"></div>`:''}`).join('')}
+      </div>
+    </div>
+    <div style="margin-bottom:20px">
+      <div class="fsec-title" style="margin-bottom:10px">Update Status</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        ${[...stages,'rejected'].map(s=>`<button class="btn btn-sm ${c.status===s?'btn-primary':'btn-outline'}" onclick="updStatus('${c.id}','${s}')">${s.charAt(0).toUpperCase()+s.slice(1)}</button>`).join('')}
+      </div>
+    </div>
+    ${(c.files||[]).length?`<div><div class="fsec-title" style="margin-bottom:10px">Documents (${c.files.length})</div><div class="fl">${c.files.map(f=>`<div class="fi">${fIcon(f.name)}<div class="fi-name">${f.name}</div><div class="fi-sz">${f.sz}</div>${f.url?`<button class="btn btn-outline btn-xs" onclick="dlFile('${f.url}','${f.name}')">↓ Download</button>`:''}</div>`).join('')}</div></div>`:''}`;
+  document.getElementById('view-edit').onclick=()=>{closeMo('mo-view');editClient(id);};
+  document.getElementById('view-del').onclick=()=>{closeMo('mo-view');delClient(id);};
+  document.getElementById('view-print').onclick=()=>printFile(c);
+  document.getElementById('view-invoice').onclick=()=>{closeMo('mo-view');openNewInvoice();setTimeout(()=>{document.getElementById('inv-client').value=id;fillInvoiceFromClient(id);},100);};
+  document.getElementById('view-wa').onclick=()=>waContact(id);
+  openMo('mo-view');
+}
+function ir(l,v){return`<div style="display:flex;gap:8px;margin-bottom:8px"><span style="font-size:0.68rem;font-weight:700;color:var(--muted);width:90px;flex-shrink:0;text-transform:uppercase;padding-top:2px">${l}</span><span style="font-size:0.83rem;color:var(--text);flex:1">${v}</span></div>`;}
+function updStatus(id,s){const c=clients.find(x=>x.id===id);if(!c)return;c.status=s;saveDB();closeMo('mo-view');viewClient(id);refreshAll();notify(`Status → "${s}" for ${c.fn} ${c.ln}`);addAct(`Status: ${c.fn} ${c.ln} → ${s}`,'upd');}
+
+// ── ADD/EDIT ──
+function openAddClient(){
+  editId=null;pendFiles=[];pendPhoto=null;
+  document.getElementById('mo-title').textContent='Add New Client';
+  ['c-fn','c-ln','c-ph','c-em','c-db','c-gi','c-ad','c-oc','c-fe','c-ap','c-cd','c-no'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('c-na').value='Ghanaian';
+  document.getElementById('c-sv').value='';document.getElementById('c-st').value='pending';document.getElementById('c-py').value='unpaid';
+  document.getElementById('file-list').innerHTML='';resetPhoto();openMo('mo-client');
+}
+function editClient(id){
+  const c=clients.find(x=>x.id===id);if(!c)return;
+  editId=id;pendFiles=[...(c.files||[])];pendPhoto=c.photo||null;
+  document.getElementById('mo-title').textContent='Edit Client';
+  const map={'c-fn':'fn','c-ln':'ln','c-ph':'ph','c-em':'em','c-db':'db','c-gi':'gi','c-ad':'ad','c-na':'na','c-oc':'oc','c-fe':'fe','c-ap':'ap','c-cd':'cd','c-no':'no'};
+  Object.entries(map).forEach(([eid,key])=>{const el=document.getElementById(eid);if(el)el.value=c[key]||'';});
+  document.getElementById('c-sv').value=c.sv||'';document.getElementById('c-st').value=c.status||'pending';document.getElementById('c-py').value=c.py||'unpaid';
+  if(c.photo){document.getElementById('photo-preview').src=c.photo;document.getElementById('photo-preview').style.display='block';document.getElementById('photo-icon').style.display='none';}else resetPhoto();
+  renderFileList();openMo('mo-client');
+}
+function saveClient(){
+  const fn=document.getElementById('c-fn').value.trim(),ln=document.getElementById('c-ln').value.trim(),ph=document.getElementById('c-ph').value.trim(),sv=document.getElementById('c-sv').value;
+  if(!fn||!ln||!ph||!sv){notify('Please fill in: First Name, Last Name, Phone and Service.','err');return;}
+  const data={fn,ln,ph,sv,em:document.getElementById('c-em').value.trim(),db:document.getElementById('c-db').value,gi:document.getElementById('c-gi').value.trim(),ad:document.getElementById('c-ad').value.trim(),na:document.getElementById('c-na').value.trim(),oc:document.getElementById('c-oc').value.trim(),status:document.getElementById('c-st').value,fe:document.getElementById('c-fe').value,ap:document.getElementById('c-ap').value,py:document.getElementById('c-py').value,cd:document.getElementById('c-cd').value,no:document.getElementById('c-no').value.trim(),files:pendFiles,photo:pendPhoto};
+  if(editId){const idx=clients.findIndex(x=>x.id===editId);clients[idx]={...clients[idx],...data};notify(`${fn} ${ln} updated!`);addAct(`Client updated: ${fn} ${ln}`,'edit');}
+  else{data.id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);data.created=new Date().toISOString();clients.push(data);notify(`${fn} ${ln} added!`);addAct(`New client: ${fn} ${ln} — ${svcLabel(sv)}`,'add');}
+  saveDB();closeMo('mo-client');refreshAll();
+}
+function delClient(id){const c=clients.find(x=>x.id===id);if(!c||!confirm(`Delete ${c.fn} ${c.ln}? Cannot be undone.`))return;clients=clients.filter(x=>x.id!==id);saveDB();refreshAll();notify(`${c.fn} ${c.ln} deleted.`);addAct(`Deleted: ${c.fn} ${c.ln}`,'del');}
+
+// ── PHOTO ──
+function loadPhoto(input){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{pendPhoto=e.target.result;document.getElementById('photo-preview').src=pendPhoto;document.getElementById('photo-preview').style.display='block';document.getElementById('photo-icon').style.display='none';};r.readAsDataURL(f);}
+function resetPhoto(){document.getElementById('photo-preview').style.display='none';document.getElementById('photo-icon').style.display='block';pendPhoto=null;}
+
+// ── FILES ──
+function pickFiles(input){Array.from(input.files).forEach(f=>{const r=new FileReader();r.onload=e=>{pendFiles.push({name:f.name,sz:fmtSz(f.size),type:f.type,url:e.target.result});renderFileList();};r.readAsDataURL(f);});}
+function renderFileList(){document.getElementById('file-list').innerHTML=pendFiles.map((f,i)=>`<div class="fi">${fIcon(f.name)}<div class="fi-name">${f.name}</div><div class="fi-sz">${f.sz}</div><button class="fi-rm" onclick="rmFile(${i})">✕</button></div>`).join('');}
+function rmFile(i){pendFiles.splice(i,1);renderFileList();}
+function initDrop(){const drop=document.getElementById('file-drop');if(!drop)return;drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('dv');});drop.addEventListener('dragleave',()=>drop.classList.remove('dv'));drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('dv');Array.from(e.dataTransfer.files).forEach(f=>{const r=new FileReader();r.onload=ev=>{pendFiles.push({name:f.name,sz:fmtSz(f.size),type:f.type,url:ev.target.result});renderFileList();};r.readAsDataURL(f);});});}
+function globalUpload(input){Array.from(input.files).forEach(f=>{const r=new FileReader();r.onload=e=>{gdocs.push({id:Date.now().toString(36),name:f.name,sz:fmtSz(f.size),type:f.type,url:e.target.result,at:new Date().toISOString()});saveAll();renderDocs();notify(`${f.name} uploaded!`);};r.readAsDataURL(f);});}
+
+// ── APPLICATIONS ──
+function renderApps(){
+  const tbody=document.getElementById('apps-tbody');
+  if(!clients.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:28px">No applications yet.</td></tr>';return;}
+  const pct={pending:10,processing:40,review:65,approved:85,completed:100,rejected:0};
+  tbody.innerHTML=[...clients].reverse().map(c=>`<tr class="app-row" data-id="${c.id}" style="cursor:pointer"><td class="td-id">EXP-${c.id.slice(-6).toUpperCase()}</td><td><div class="td-name">${c.fn} ${c.ln}</div><div class="td-id">${c.ph}</div></td><td style="font-size:0.78rem">${svcLabel(c.sv)}</td><td>${mkBadge(c.status)}</td><td style="font-size:0.8rem">${c.fe?'GHS '+parseFloat(c.fe).toFixed(2):'—'}</td><td style="font-size:0.8rem">${pyLabel(c.py)}</td><td style="width:100px"><div style="font-size:0.68rem;color:var(--muted);margin-bottom:2px">${pct[c.status]||0}%</div><div class="prog"><div class="prog-f" style="width:${pct[c.status]||0}%"></div></div></td><td style="font-size:0.75rem;color:var(--muted)">${fmtDate(c.created)}</td><td onclick="event.stopPropagation()"><button class="btn btn-outline btn-xs view-app-btn" data-id="${c.id}">View</button></td></tr>`).join('');
+  tbody.querySelectorAll('.app-row').forEach(row=>{
+    row.addEventListener('click', function(e){ if(e.target.tagName!=='BUTTON') viewClient(this.getAttribute('data-id')); });
+  });
+  tbody.querySelectorAll('.view-app-btn').forEach(btn=>{
+    btn.addEventListener('click', function(e){ e.stopPropagation(); viewClient(this.getAttribute('data-id')); });
+  });
+}
+
+// ── DOCUMENTS ──
+let docView = 'folders';
+function setDocView(v,btn){
+  docView=v;
+  document.querySelectorAll('#doc-view-toggle .btn').forEach(b=>{b.className='btn btn-sm btn-ghost';b.style.borderRadius='50px';b.style.padding='5px 14px';});
+  btn.className='btn btn-sm btn-primary';btn.style.borderRadius='50px';btn.style.padding='5px 14px';
+  renderDocs();
+}
+function renderDocs(){
+  const grid=document.getElementById('docs-grid');
+  if(!grid)return;
+  if(docView==='folders'){
+    renderDocFolders(grid);
+  } else {
+    renderDocAll(grid);
+  }
+}
+function renderDocFolders(grid){
+  const folders=[];
+  // Client folders
+  clients.forEach(c=>{
+    if((c.files||[]).length>0){
+      folders.push({id:c.id,name:`${c.fn} ${c.ln}`,sub:`EXP-${c.id.slice(-6).toUpperCase()} · ${svcLabel(c.sv)}`,files:c.files,isClient:true,photo:c.photo});
+    }
+  });
+  // General uploads
+  if(gdocs.length>0){
+    folders.push({id:'__general__',name:'General Uploads',sub:`${gdocs.length} file(s) — not linked to a client`,files:gdocs,isClient:false});
+  }
+  if(!folders.length){
+    grid.innerHTML=`<div class="empty" style="grid-column:1/-1;padding:60px 20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><h4>No documents yet</h4><p>Upload documents when adding a client, or click "Upload Document" above</p></div>`;
+    return;
+  }
+  grid.innerHTML='';
+  folders.forEach(folder=>{
+    const div=document.createElement('div');
+    div.style.cssText='margin-bottom:20px';
+    const initials=folder.isClient?(folder.name.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2)):'GU';
+    const avatarStyle=folder.isClient?`background:linear-gradient(135deg,var(--g2),var(--g4));color:white;`:`background:var(--gold);color:var(--dark);`;
+    div.innerHTML=`
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:14px 18px;background:white;border-radius:var(--r);border:1px solid var(--border);cursor:pointer;transition:var(--t)" class="folder-hdr" data-fid="${folder.id}" onclick="toggleFolder('${folder.id}')">
+        <div style="width:40px;height:40px;border-radius:10px;${avatarStyle}display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;flex-shrink:0">
+          ${folder.isClient&&folder.photo?`<img src="${folder.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:10px"/>`:`<span>${initials}</span>`}
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:0.92rem;color:var(--g1)">${folder.name}</div>
+          <div style="font-size:0.72rem;color:var(--muted)">${folder.sub}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="background:var(--cream);color:var(--g2);font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid var(--border)">${folder.files.length} file${folder.files.length!==1?'s':''}</span>
+          <svg id="chevron-${folder.id}" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" width="16" height="16" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div id="folder-files-${folder.id}" style="display:none;margin-left:16px;border-left:2px solid var(--border);padding-left:16px;margin-bottom:4px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;padding:4px 0 12px">
+          ${folder.files.map(f=>{const{bg,ic}=docStyle(f.name);return`<div class="doc-card"><div style="width:40px;height:40px;border-radius:10px;background:${bg};display:flex;align-items:center;justify-content:center;margin-bottom:10px"><svg viewBox="0 0 24 24" fill="none" stroke="${ic}" stroke-width="2" width="19" height="19"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div style="font-weight:700;font-size:0.8rem;color:var(--g1);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.name}</div><div style="font-size:0.7rem;color:var(--muted);margin-bottom:10px">${f.sz}</div><div style="display:flex;gap:5px">${f.url?`<button class="btn btn-outline btn-xs" onclick="dlFile('${f.url}','${f.name}')">↓ Download</button>`:''}${folder.isClient?`<button class="btn btn-ghost btn-xs" onclick="viewClient('${folder.id}')">View Client</button>`:''}</div></div>`;}).join('')}
+        </div>
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+function toggleFolder(fid){
+  const el=document.getElementById('folder-files-'+fid);
+  const ch=document.getElementById('chevron-'+fid);
+  if(!el)return;
+  const open=el.style.display!=='none'&&el.style.display!=='';
+  el.style.display=open?'none':'block';
+  if(ch)ch.style.transform=open?'':'rotate(180deg)';
+}
+function renderDocAll(grid){
+  const all=[];
+  clients.forEach(c=>(c.files||[]).forEach(f=>all.push({...f,client:`${c.fn} ${c.ln}`,cid:c.id})));
+  gdocs.forEach(f=>all.push({...f,client:'General Upload'}));
+  if(!all.length){grid.innerHTML=`<div class="empty" style="padding:60px 20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><h4>No documents yet</h4><p>Upload documents or add them when creating a client</p></div>`;return;}
+  grid.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px">${[...all].reverse().map(f=>{const{bg,ic}=docStyle(f.name);return`<div class="doc-card"><div style="width:44px;height:44px;border-radius:11px;background:${bg};display:flex;align-items:center;justify-content:center;margin-bottom:11px"><svg viewBox="0 0 24 24" fill="none" stroke="${ic}" stroke-width="2" width="22" height="22"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div style="font-weight:700;font-size:0.82rem;color:var(--g1);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.name}</div><div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px">${f.client} · ${f.sz}</div><div style="display:flex;gap:6px">${f.url?`<button class="btn btn-outline btn-xs" onclick="dlFile('${f.url}','${f.name}')">↓ Download</button>`:''}${f.cid?`<button class="btn btn-ghost btn-xs" onclick="viewClient('${f.cid}')">Client</button>`:''}</div></div>`;}).join('')}</div>`;
+}
+
+// ── TRACKER ──
+function renderTracker(){
+  const el=document.getElementById('tracker-list');
+  const active=clients.filter(c=>!['completed','rejected'].includes(c.status));
+  if(!active.length){el.innerHTML=`<div class="empty card" style="padding:50px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><h4>No active applications</h4><p>All caught up! Add clients to see progress here.</p></div>`;return;}
+  const stages=['pending','processing','review','approved','completed'],pct={pending:10,processing:40,review:65,approved:85,completed:100};
+  el.innerHTML=active.map(c=>{const si=stages.indexOf(c.status);return`<div class="card" style="margin-bottom:14px"><div class="card-hdr"><div><strong style="font-family:'Syne',sans-serif;color:var(--g1)">${c.fn} ${c.ln}</strong><span style="font-size:0.75rem;color:var(--muted);margin-left:8px">EXP-${c.id.slice(-6).toUpperCase()} · ${svcLabel(c.sv)}</span></div><div style="display:flex;align-items:center;gap:8px">${mkBadge(c.status)}<button class="btn btn-outline btn-xs" onclick="viewClient('${c.id}')">Details</button></div></div><div style="padding:18px 22px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:0.75rem;color:var(--muted)">Progress</span><span style="font-size:0.75rem;font-weight:700;color:var(--g2)">${pct[c.status]||0}%</span></div><div class="prog" style="height:7px;margin-bottom:14px"><div class="prog-f" style="width:${pct[c.status]||0}%"></div></div><div style="display:flex;align-items:flex-start">${stages.map((s,i)=>`<div class="tr-step"><div class="tr-circ ${i<si?'done':i===si?'active':'wait'}">${i<si?'✓':i+1}</div><div class="tr-lbl">${s.charAt(0).toUpperCase()+s.slice(1)}</div></div>${i<stages.length-1?`<div class="tr-line ${i<si?'done':''}" style="margin-top:17px"></div>`:''}`).join('')}</div></div></div>`;}).join('');
+}
+
+// ── REPORTS ──
+function renderReports(){
+  const t=clients.length,passport=clients.filter(c=>c.sv&&c.sv.startsWith('passport')).length,birth=clients.filter(c=>c.sv==='birth-cert').length,done=clients.filter(c=>['completed','approved'].includes(c.status)).length;
+  ['r-total','r-passport','r-birth','r-done'].forEach((id,i)=>{const el=document.getElementById(id);if(el)el.textContent=[t,passport,birth,done][i];});
+  const byS={},bySt={},byP={};
+  clients.forEach(c=>{byS[c.sv]=(byS[c.sv]||0)+1;bySt[c.status]=(bySt[c.status]||0)+1;byP[c.py]=(byP[c.py]||0)+1;});
+  const bar=(l,n,tot,col='var(--g3)')=>`<div class="rbar"><div class="rbar-top"><span>${l}</span><em>${n} client${n!==1?'s':''}</em></div><div class="prog"><div class="prog-f" style="width:${tot?Math.round(n/tot*100):0}%;background:${col}"></div></div></div>`;
+  const sc={'#e67e22':'pending','#2471a3':'processing','#7d3c98':'review','var(--g3)':'approved','var(--g2)':'completed','var(--red)':'rejected'};
+  const stCol={pending:'#e67e22',processing:'#2471a3',review:'#7d3c98',approved:'var(--g3)',completed:'var(--g2)',rejected:'var(--red)'};
+  const rs=document.getElementById('r-service');if(rs)rs.innerHTML=t?Object.entries(byS).map(([s,n])=>bar(svcLabel(s),n,t)).join(''):'<p style="color:var(--muted);font-size:0.82rem">No data yet.</p>';
+  const rst=document.getElementById('r-status');if(rst)rst.innerHTML=t?Object.entries(bySt).map(([s,n])=>bar(s.charAt(0).toUpperCase()+s.slice(1),n,t,stCol[s]||'var(--g3)')).join(''):'<p style="color:var(--muted);font-size:0.82rem">No data yet.</p>';
+  const rp=document.getElementById('r-payment');if(rp)rp.innerHTML=t?Object.entries(byP).map(([p,n])=>bar(p==='paid'?'✅ Paid':p==='partial'?'⏳ Partial':'❌ Unpaid',n,t)).join(''):'<p style="color:var(--muted);font-size:0.82rem">No data yet.</p>';
+}
+
+// ── INVOICES ──
+// (invoices array is declared and loaded in the boot section above)
+let invItems = [];
+let editInvId = null;
+
+function openNewInvoice(){
+  editInvId=null;
+  invItems=[{desc:'',qty:1,price:0}];
+  document.getElementById('inv-mo-title').textContent='New Invoice';
+  document.getElementById('inv-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('inv-due').value='';
+  document.getElementById('inv-status').value='unpaid';
+  document.getElementById('inv-notes').value='Payment via MoMo '+(settings.cphone||'0500639478')+' ('+( settings.cname||'Exprove Passport Ltd')+')';
+  // populate client dropdown
+  const sel=document.getElementById('inv-client');
+  sel.innerHTML='<option value="">— Choose a client —</option>'+clients.map(c=>`<option value="${c.id}">${c.fn} ${c.ln} (EXP-${c.id.slice(-6).toUpperCase()})</option>`).join('');
+  sel.value='';
+  renderInvItems();
+  openMo('mo-invoice');
+}
+
+function fillInvoiceFromClient(cid){
+  const c=clients.find(x=>x.id===cid);
+  if(!c)return;
+  invItems=[{desc:svcLabel(c.sv),qty:1,price:parseFloat(c.fe)||0}];
+  renderInvItems();
+}
+
+function addInvItem(){
+  invItems.push({desc:'',qty:1,price:0});
+  renderInvItems();
+}
+function removeInvItem(i){invItems.splice(i,1);renderInvItems();}
+function renderInvItems(){
+  const wrap=document.getElementById('inv-items');
+  wrap.innerHTML=invItems.map((it,i)=>`
+    <div style="display:grid;grid-template-columns:1fr 90px 90px 40px;gap:8px;margin-bottom:8px;align-items:center">
+      <input class="inv-desc" data-i="${i}" value="${it.desc}" placeholder="Service description…" style="padding:8px 11px;border:1.5px solid var(--border);border-radius:var(--rsm);font-size:0.83rem;color:var(--text);background:var(--cream);outline:none" oninput="invItemChange(${i},'desc',this.value)"/>
+      <input class="inv-qty" data-i="${i}" type="number" value="${it.qty}" min="1" style="padding:8px 11px;border:1.5px solid var(--border);border-radius:var(--rsm);font-size:0.83rem;color:var(--text);background:var(--cream);outline:none;text-align:center" oninput="invItemChange(${i},'qty',this.value)"/>
+      <input class="inv-price" data-i="${i}" type="number" value="${it.price}" min="0" step="0.01" style="padding:8px 11px;border:1.5px solid var(--border);border-radius:var(--rsm);font-size:0.83rem;color:var(--text);background:var(--cream);outline:none;text-align:right" oninput="invItemChange(${i},'price',this.value)"/>
+      <button onclick="removeInvItem(${i})" style="width:32px;height:32px;border:none;background:var(--red-bg);color:var(--red);border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>`).join('');
+  calcInvTotals();
+}
+function invItemChange(i,k,v){invItems[i][k]=k==='desc'?v:parseFloat(v)||0;calcInvTotals();}
+function calcInvTotals(){
+  const sub=invItems.reduce((s,it)=>s+(parseFloat(it.qty)||0)*(parseFloat(it.price)||0),0);
+  const tax=0;
+  const tot=sub+tax;
+  const fmt=n=>'GHS '+n.toFixed(2);
+  const el1=document.getElementById('inv-subtotal'),el2=document.getElementById('inv-tax'),el3=document.getElementById('inv-total');
+  if(el1)el1.textContent=fmt(sub);
+  if(el2)el2.textContent=fmt(tax);
+  if(el3)el3.textContent=fmt(tot);
+}
+
+function saveInvoice(andPrint=false){
+  const cid=document.getElementById('inv-client').value;
+  const date=document.getElementById('inv-date').value;
+  if(!cid){notify('Please select a client.','err');return;}
+  if(!date){notify('Please set an invoice date.','err');return;}
+  if(!invItems.length||!invItems.some(it=>it.desc)){notify('Add at least one item.','err');return;}
+  const sub=invItems.reduce((s,it)=>s+(it.qty||0)*(it.price||0),0);
+  const inv={
+    id:editInvId||(Date.now().toString(36)+Math.random().toString(36).slice(2,5)),
+    num:'INV-'+(invoices.length+1).toString().padStart(4,'0'),
+    cid,date,due:document.getElementById('inv-due').value,
+    status:document.getElementById('inv-status').value,
+    items:[...invItems],total:sub,
+    notes:document.getElementById('inv-notes').value,
+    created:editInvId?undefined:new Date().toISOString()
+  };
+  if(editInvId){const idx=invoices.findIndex(x=>x.id===editInvId);if(idx>-1)invoices[idx]={...invoices[idx],...inv};}
+  else{invoices.push(inv);}
+  saveAll();
+  addAct(`Invoice ${inv.num} created`,'add');
+  renderInvoices();
+  closeMo('mo-invoice');
+  notify('Invoice saved!');
+  if(andPrint)printInvoice(inv.id);
+}
+function saveAndPrintInvoice(){saveInvoice(true);}
+
+function renderInvoices(){
+  const tbody=document.getElementById('inv-tbody');
+  const cnt=document.getElementById('inv-count');
+  if(cnt)cnt.textContent=invoices.length+' invoice'+(invoices.length!==1?'s':'');
+  if(!tbody)return;
+  if(!invoices.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:28px">No invoices yet. Click "New Invoice" to create one.</td></tr>';return;}
+  const pyCol={unpaid:'var(--red)',partial:'#e67e22',paid:'var(--g2)'};
+  const pyBg={unpaid:'var(--red-bg)',partial:'#fff8e1',paid:'#e8f5e9'};
+  tbody.innerHTML=[...invoices].reverse().map(inv=>{
+    const c=clients.find(x=>x.id===inv.cid);
+    return`<tr><td style="font-weight:700;font-family:monospace;font-size:0.82rem;color:var(--g2)">${inv.num}</td><td><div class="td-name">${c?`${c.fn} ${c.ln}`:'Unknown Client'}</div><div class="td-id">${c?`EXP-${c.id.slice(-6).toUpperCase()}`:''}</div></td><td style="font-size:0.8rem">${inv.items.map(it=>it.desc).filter(Boolean).join(', ')}</td><td style="font-weight:700;color:var(--g1)">GHS ${parseFloat(inv.total||0).toFixed(2)}</td><td><span style="background:${pyBg[inv.status]||pyBg.unpaid};color:${pyCol[inv.status]||pyCol.unpaid};padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700">${inv.status.charAt(0).toUpperCase()+inv.status.slice(1)}</span></td><td style="font-size:0.75rem;color:var(--muted)">${fmtDate(inv.date)}</td><td style="white-space:nowrap"><button class="btn btn-outline btn-xs" onclick="printInvoice('${inv.id}')" style="margin-right:4px">🖨 Print</button><button class="btn btn-ghost btn-xs" onclick="delInvoice('${inv.id}')">Del</button></td></tr>`;
+  }).join('');
+}
+function delInvoice(id){if(!confirm('Delete this invoice?'))return;invoices=invoices.filter(x=>x.id!==id);saveAll();renderInvoices();notify('Invoice deleted.');}
+
+function printInvoice(id){
+  const inv=invoices.find(x=>x.id===id);if(!inv)return;
+  const c=clients.find(x=>x.id===inv.cid);
+  const sub=inv.items.reduce((s,it)=>s+(it.qty||0)*(it.price||0),0);
+  const w=window.open('','_blank');
+  const pyColor={unpaid:'#c0392b',partial:'#e67e22',paid:'#1a5c2a'};
+  w.document.write(`<!DOCTYPE html><html><head><title>Invoice ${inv.num}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;color:#111;background:#fff;padding:0}
+.page{max-width:800px;margin:0 auto;padding:40px 44px;min-height:100vh}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:36px}
+.co-name{font-size:22px;font-weight:900;color:#0d2414;letter-spacing:-0.5px}
+.co-det{font-size:11px;color:#6a8a72;margin-top:4px;line-height:1.6}
+.inv-badge{background:#0d2414;color:white;font-size:22px;font-weight:900;padding:8px 20px;border-radius:8px;letter-spacing:1px}
+.inv-meta{font-size:11px;color:#6a8a72;text-align:right;margin-top:6px;line-height:1.7}
+.divider{height:2px;background:linear-gradient(90deg,#1a5c2a,#c8a84b);margin:24px 0;border-radius:2px}
+.bill-row{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:28px}
+.bill-sec h4{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6a8a72;margin-bottom:8px}
+.bill-sec .name{font-size:14px;font-weight:800;color:#0d2414}
+.bill-sec .det{font-size:11.5px;color:#444;line-height:1.7;margin-top:2px}
+table{width:100%;border-collapse:collapse;margin-bottom:20px}
+thead th{background:#0d2414;color:white;padding:9px 13px;text-align:left;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+thead th:last-child{text-align:right}
+tbody td{padding:11px 13px;font-size:12.5px;border-bottom:1px solid #f0f0f0}
+tbody td:last-child{text-align:right;font-weight:600}
+tfoot td{padding:8px 13px;font-size:12.5px}
+.tot-row td{font-size:14px;font-weight:900;color:#0d2414;background:#f7f5ef;border-top:2px solid #1a5c2a}
+.status-pill{display:inline-block;padding:4px 14px;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;border:2px solid ${pyColor[inv.status]||'#c0392b'};color:${pyColor[inv.status]||'#c0392b'}}
+.notes-box{background:#f7f5ef;border-left:3px solid #1a5c2a;padding:12px 16px;border-radius:0 8px 8px 0;margin-top:24px;font-size:11.5px;color:#444;line-height:1.6}
+.footer{margin-top:40px;padding-top:14px;border-top:1px solid #ddd;display:flex;justify-content:space-between;font-size:10px;color:#999}
+@media print{.no-print{display:none!important}body{padding:0}.page{padding:28px 32px}}
+</style>
+</head><body>
+<div class="page">
+  <div class="hdr">
+    <div>
+      <div class="co-name">${settings.cname||'Exprove Passport Limited'}</div>
+      <div class="co-det">${settings.caddr||'Accra, Ghana'}<br/>${settings.cphone||'0500639478'} &nbsp;|&nbsp; ${settings.cemail||''}</div>
+    </div>
+    <div style="text-align:right">
+      <div class="inv-badge">INVOICE</div>
+      <div class="inv-meta">
+        <strong>${inv.num}</strong><br/>
+        Date: ${fmtDateP(inv.date)}<br/>
+        ${inv.due?`Due: ${fmtDateP(inv.due)}<br/>`:''}
+        <span class="status-pill">${inv.status.toUpperCase()}</span>
+      </div>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div class="bill-row">
+    <div class="bill-sec">
+      <h4>From</h4>
+      <div class="name">${settings.cname||'Exprove Passport Limited'}</div>
+      <div class="det">${settings.caddr||''}<br/>${settings.cphone||''}</div>
+    </div>
+    <div class="bill-sec">
+      <h4>Bill To</h4>
+      <div class="name">${c?`${c.fn} ${c.ln}`:'—'}</div>
+      <div class="det">${c&&c.ph?c.ph:''}<br/>${c&&c.em?c.em:''}<br/>${c&&c.gi?'ID: '+c.gi:''}</div>
+    </div>
+  </div>
+  <table>
+    <thead><tr><th>#</th><th>Description</th><th style="text-align:right">Qty</th><th style="text-align:right">Unit Price (GHS)</th><th>Total (GHS)</th></tr></thead>
+    <tbody>${inv.items.map((it,i)=>`<tr><td style="color:#999;font-size:11px">${i+1}</td><td>${it.desc||'—'}</td><td style="text-align:right">${it.qty||1}</td><td style="text-align:right">${parseFloat(it.price||0).toFixed(2)}</td><td>${((it.qty||0)*(it.price||0)).toFixed(2)}</td></tr>`).join('')}</tbody>
+    <tfoot>
+      <tr><td colspan="4" style="text-align:right;color:#6a8a72">Subtotal</td><td style="font-weight:700">${sub.toFixed(2)}</td></tr>
+      <tr><td colspan="4" style="text-align:right;color:#6a8a72">Tax (0%)</td><td style="font-weight:700">0.00</td></tr>
+      <tr class="tot-row"><td colspan="4" style="text-align:right">TOTAL DUE (GHS)</td><td>${sub.toFixed(2)}</td></tr>
+    </tfoot>
+  </table>
+  ${inv.notes?`<div class="notes-box"><strong>Payment Instructions:</strong><br/>${inv.notes}</div>`:''}
+  <div class="footer">
+    <span>${settings.cname||'Exprove Passport Limited'} · ${settings.caddr||'Accra, Ghana'}</span>
+    <span>Printed: ${new Date().toLocaleString('en-GH')}</span>
+  </div>
+  <div style="text-align:center;margin-top:24px" class="no-print">
+    <button onclick="window.print()" style="padding:10px 28px;background:#1a5c2a;color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">🖨 Print Invoice</button>
+  </div>
+</div>
+</body></html>`);
+  w.document.close();
+  function fmtDateP(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-GH',{day:'numeric',month:'long',year:'numeric'});}
+}
+
+// ── WHATSAPP ──
+function waContact(id){
+  const c=clients.find(x=>x.id===id);if(!c)return;
+  const phone=c.ph.replace(/\D/g,'');
+  const msg=encodeURIComponent(`Hello ${c.fn} ${c.ln},\n\nThis is Exprove Passport Limited regarding your ${svcLabel(c.sv)} application.\n\nRef: EXP-${c.id.slice(-6).toUpperCase()}\nStatus: ${c.status.charAt(0).toUpperCase()+c.status.slice(1)}\n\nPlease contact us if you have any questions.\n\n📞 ${settings.cphone||'0500639478'}\n✉ ${settings.cemail||'michaelattaantwi5213@gmail.com'}\n\nYour Journey. Our Priority.`);
+  window.open(`https://wa.me/${phone}?text=${msg}`,'_blank');
+}
+
+// ── PRINT CLIENT FILE ──
+function printFile(c){
+  const pct={pending:10,processing:40,review:65,approved:85,completed:100,rejected:0};
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>Client File — ${c.fn} ${c.ln}</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#111;font-size:13px;max-width:900px;margin:0 auto}.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1a5c2a;padding-bottom:16px;margin-bottom:20px}.co{font-size:18px;font-weight:800;color:#1a5c2a}.ct{font-size:11px;color:#666;margin-top:3px}h2{font-size:13px;color:#1a5c2a;margin:16px 0 8px;border-bottom:1px solid #eee;padding-bottom:5px;text-transform:uppercase;letter-spacing:1px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.row{display:flex;gap:8px;margin-bottom:5px}.lbl{font-weight:700;font-size:10px;color:#888;text-transform:uppercase;width:100px;flex-shrink:0;padding-top:1px}.val{font-size:12px;color:#111}.status{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;background:#e8f5e9;color:#1a5c2a;display:inline-block}.pb{height:8px;background:#eee;border-radius:10px;margin:8px 0}.pf{height:100%;background:#1a5c2a;border-radius:10px}.foot{margin-top:28px;padding-top:10px;border-top:1px solid #ddd;font-size:10px;color:#888;display:flex;justify-content:space-between}@media print{.no-print{display:none}}</style></head><body>
+  <div class="hdr"><div><div class="co">Exprove Passport Limited</div><div class="ct">Your Journey. Our Priority. | ${settings.cphone} | ${settings.cemail}</div><div class="ct">${settings.caddr}</div></div><div style="text-align:right"><div style="font-weight:800;font-size:14px">CLIENT FILE</div><div style="font-size:11px;color:#666">Ref: EXP-${c.id.slice(-6).toUpperCase()}</div><div style="font-size:11px;color:#666">Date: ${new Date().toLocaleDateString('en-GH')}</div></div></div>
+  <h2>Personal Information</h2><div class="grid"><div>${row('Full Name',c.fn+' '+c.ln)}${row('Phone',c.ph)}${row('Email',c.em||'—')}${row('Date of Birth',c.db||'—')}</div><div>${row('ID Number',c.gi||'—')}${row('Nationality',c.na||'—')}${row('Occupation',c.oc||'—')}${row('Address',c.ad||'—')}</div></div>
+  <h2>Application Details</h2><div class="grid"><div>${row('Service',svcLabel(c.sv))}${row('Application Fee',c.fe?'GHS '+parseFloat(c.fe).toFixed(2):'—')}${row('Amount Paid',c.ap?'GHS '+parseFloat(c.ap).toFixed(2):'—')}</div><div>${row('Payment Status',c.py||'—')}${row('Date Added',fmtDate(c.created))}${row('Expected Completion',c.cd?fmtDate(c.cd):'—')}</div></div>
+  <h2>Application Status</h2><div><span class="status">${(c.status||'pending').toUpperCase()}</span></div><div class="pb"><div class="pf" style="width:${pct[c.status]||0}%"></div></div><div style="font-size:11px;color:#666">${pct[c.status]||0}% complete</div>
+  ${c.no?`<h2>Notes</h2><p style="font-size:12px;color:#333">${c.no}</p>`:''}
+  ${(c.files||[]).length?`<h2>Documents on File (${c.files.length})</h2><ul style="font-size:12px;margin:0;padding-left:16px">${c.files.map(f=>`<li style="margin-bottom:3px">${f.name} <span style="color:#888">(${f.sz})</span></li>`).join('')}</ul>`:''}
+  <div class="foot"><span>${settings.cname||'Exprove Passport Limited'} · ${settings.caddr||'Accra, Ghana'}</span><span>Printed: ${new Date().toLocaleString('en-GH')}</span></div>
+  <br/><button class="no-print" onclick="window.print()" style="padding:8px 20px;background:#1a5c2a;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;margin-top:10px">🖨 Print This File</button>
+  </body></html>`);
+  w.document.close();
+  function row(l,v){return`<div class="row"><span class="lbl">${l}</span><span class="val">${v}</span></div>`;}
+}
+
+// ── EXPORT ──
+function exportCSV(){
+  if(!clients.length){notify('No clients to export.','err');return;}
+  const hdr=['Ref','First Name','Last Name','Phone','Email','DOB','ID','Address','Nationality','Occupation','Service','Status','Fee(GHS)','Paid(GHS)','Payment','Expected','Notes','Docs','Date Added'];
+  const rows=clients.map(c=>['EXP-'+c.id.slice(-6).toUpperCase(),c.fn,c.ln,c.ph,c.em||'',c.db||'',c.gi||'',c.ad||'',c.na||'',c.oc||'',svcLabel(c.sv),c.status,c.fe||'',c.ap||'',c.py,c.cd||'',c.no||'',(c.files||[]).length,fmtDate(c.created)]);
+  const csv=[hdr,...rows].map(r=>r.map(v=>`"${(v+'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  dlFile('data:text/csv;charset=utf-8,'+encodeURIComponent(csv),`Exprove_Clients_${new Date().toISOString().slice(0,10)}.csv`);
+  notify('Exported as CSV!');
+}
+function exportJSON(){const bk=JSON.stringify({clients,settings,exported:new Date().toISOString()},null,2);dlFile('data:application/json;charset=utf-8,'+encodeURIComponent(bk),`Exprove_Backup_${new Date().toISOString().slice(0,10)}.json`);notify('Backup exported!');}
+function importJSON(){document.getElementById('import-file').click();}
+function doImport(input){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const bk=JSON.parse(e.target.result);if(bk.clients){clients=bk.clients;saveDB();refreshAll();notify(`${clients.length} clients imported!`);}else notify('Invalid backup file.','err');}catch{notify('Could not read file.','err');}};r.readAsText(f);}
+function clearAll(){if(!confirm('Delete ALL clients and documents permanently?'))return;clients=[];gdocs=[];activity=[];invoices=[];saveAll();refreshAll();notify('All data cleared.');}
+
+// ── SETTINGS ──
+function setTab(el,tabId){document.querySelectorAll('.sets-ni').forEach(n=>n.classList.remove('active'));el.classList.add('active');['st-company','st-data','st-profile'].forEach(id=>{const t=document.getElementById(id);if(t)t.style.display='none';});document.getElementById(tabId).style.display='block';}
+function saveSettings(){['cname','cphone','cemail','caddr','cwa'].forEach(k=>{const el=document.getElementById('st-'+k);if(el)settings[k]=el.value.trim();});saveAll();applySettings();notify('Settings saved!');}
+function saveProfile(){const u=document.getElementById('st-uname');if(u)settings.uname=u.value.trim();saveAll();applySettings();notify('Profile updated!');}
+
+// ── HELPERS ──
+function saveDB(){ saveAll(); }
+function openMo(id){document.getElementById(id).classList.add('open');}
+function closeMo(id){document.getElementById(id).classList.remove('open');}
+function notify(msg,type='ok'){const w=document.getElementById('notif-wrap');const el=document.createElement('div');el.className='notif'+(type==='err'?' err':'');el.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="${type==='err'?'var(--red)':'var(--g3)'}" stroke-width="2.5"><polyline points="${type==='err'?'18 6 6 18M6 6l12 12':'20 6 9 17 4 12'}"/></svg>${msg}`;w.appendChild(el);setTimeout(()=>el.remove(),4000);}
+function mkBadge(s){const m={pending:'b-pending',processing:'b-processing',review:'b-review',approved:'b-approved',completed:'b-completed',rejected:'b-rejected'};return`<span class="badge ${m[s]||'b-pending'}">${s||'pending'}</span>`;}
+function svcLabel(s){return{'passport-new':'New Passport','passport-renewal':'Passport Renewal','birth-cert':'Birth Certificate','document-check':'Document Check','appointment':'Appointment','travel':'Travel Advisory'}[s]||s||'—';}
+function pyLabel(p){return{unpaid:'❌ Unpaid',partial:'⏳ Partial',paid:'✅ Paid'}[p]||p||'—';}
+function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-GH',{day:'numeric',month:'short',year:'numeric'});}
+function timeAgo(d){const s=Math.floor((Date.now()-new Date(d))/1000);if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';}
+function fmtSz(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB';}
+function fIcon(name){const{bg,ic}=docStyle(name);return`<div class="fi-ico" style="background:${bg}"><svg viewBox="0 0 24 24" fill="none" stroke="${ic}" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>`;}
+function docStyle(name){const ext=(name||'').split('.').pop().toLowerCase();if(ext==='pdf')return{bg:'#fdecea',ic:'#c0392b'};if(['jpg','jpeg','png','gif','webp'].includes(ext))return{bg:'#e3f2fd',ic:'#2471a3'};if(['doc','docx'].includes(ext))return{bg:'#e8f0fe',ic:'#1a73e8'};return{bg:'#e8f5e9',ic:'#2d7a3e'};}
+function dlFile(url,name){const a=document.createElement('a');a.href=url;a.download=name;a.click();}
+// Global delegated handler for dynamically rendered buttons
+document.addEventListener('click', function(e){
+  // Client card WA button
+  if(e.target.closest('.cc-wa')){e.stopPropagation();waContact(e.target.closest('.cc-wa').getAttribute('data-wa'));return;}
+  // Client card Edit button
+  if(e.target.closest('.cc-edit')){e.stopPropagation();editClient(e.target.closest('.cc-edit').getAttribute('data-edit'));return;}
+  // Client card Delete button
+  if(e.target.closest('.cc-del')){e.stopPropagation();delClient(e.target.closest('.cc-del').getAttribute('data-del'));return;}
+});
+document.querySelectorAll('.mo').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});});
+</script>
+</body>
+</html>
