@@ -987,7 +987,7 @@ function renderClients(){
   }
   if(curSearch){const q=curSearch.toLowerCase();list=list.filter(c=>(`${c.fn} ${c.ln}`).toLowerCase().includes(q)||(c.ph||'').includes(q)||(c.em||'').toLowerCase().includes(q)||(c.gi||'').toLowerCase().includes(q));}
   if(!list.length){grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><h4>No clients found</h4><p>${curFilter==='all'?'Click "Add Client" to get started':'Try a different filter'}</p></div>`;return;}
-  grid.innerHTML=list.map(c=>`<div class="cc dash-client" data-id="${c.id}"><div class="cc-top"><div class="cc-av">${c.photo?`<img src="${c.photo}"/>`:(c.fn[0]||'').toUpperCase()+(c.ln[0]||'').toUpperCase()}</div><div style="flex:1;min-width:0"><div class="cc-name">${c.fn} ${c.ln}</div><div class="cc-id">EXP-${c.id.slice(-6).toUpperCase()}</div></div>${mkBadge(c.status)}</div><div class="cc-meta"><div class="cc-mi"><label>Service</label><span>${svcLabel(c.sv)}</span></div><div class="cc-mi"><label>Payment</label><span>${pyLabel(c.py)}</span></div><div class="cc-mi"><label>Phone</label><span>${c.ph||'—'}</span></div><div class="cc-mi"><label>Added</label><span>${fmtDate(c.created)}</span></div></div>${c.no?`<div style="margin-top:9px;font-size:0.75rem;color:var(--muted);background:var(--cream);padding:7px 10px;border-radius:6px">${c.no.slice(0,80)}${c.no.length>80?'…':''}</div>`:''}<div class="cc-foot"><span style="font-size:0.72rem;color:var(--muted)">${(c.files||[]).length} doc(s)</span><div style="display:flex;gap:5px" onclick="event.stopPropagation()"><button data-wa="${c.id}" class="btn btn-wa btn-xs cc-wa">WA</button><button data-edit="${c.id}" class="btn btn-outline btn-xs cc-edit">Edit</button><button data-del="${c.id}" class="btn btn-danger btn-xs cc-del">Del</button></div></div></div>`).join('');
+  grid.innerHTML=list.map(c=>{const wurl=waUrl(c);return`<div class="cc dash-client" data-id="${c.id}"><div class="cc-top"><div class="cc-av">${c.photo?`<img src="${c.photo}"/>`:(c.fn[0]||'').toUpperCase()+(c.ln[0]||'').toUpperCase()}</div><div style="flex:1;min-width:0"><div class="cc-name">${c.fn} ${c.ln}</div><div class="cc-id">EXP-${c.id.slice(-6).toUpperCase()}</div></div>${mkBadge(c.status)}</div><div class="cc-meta"><div class="cc-mi"><label>Service</label><span>${svcLabel(c.sv)}</span></div><div class="cc-mi"><label>Payment</label><span>${pyLabel(c.py)}</span></div><div class="cc-mi"><label>Phone</label><span>${c.ph||'—'}</span></div><div class="cc-mi"><label>Added</label><span>${fmtDate(c.created)}</span></div></div>${c.no?`<div style="margin-top:9px;font-size:0.75rem;color:var(--muted);background:var(--cream);padding:7px 10px;border-radius:6px">${c.no.slice(0,80)}${c.no.length>80?'…':''}</div>`:''}<div class="cc-foot"><span style="font-size:0.72rem;color:var(--muted)">${(c.files||[]).length} doc(s)</span><div style="display:flex;gap:5px" onclick="event.stopPropagation()">${wurl?`<a href="${wurl}" target="_blank" rel="noopener noreferrer" class="btn btn-wa btn-xs" onclick="event.stopPropagation()" style="text-decoration:none;display:inline-flex;align-items:center">WA</a>`:`<button class="btn btn-wa btn-xs" onclick="event.stopPropagation();notify('No phone number for this client.')" style="opacity:0.5;cursor:not-allowed">WA</button>`}<button data-edit="${c.id}" class="btn btn-outline btn-xs cc-edit">Edit</button><button data-del="${c.id}" class="btn btn-danger btn-xs cc-del">Del</button></div></div></div>`;}).join('');
   // Attach click listeners after render
   grid.querySelectorAll('.dash-client').forEach(card=>{
     card.addEventListener('click', function(e){
@@ -1407,11 +1407,21 @@ tfoot td{padding:8px 13px;font-size:12.5px}
 }
 
 // ── WHATSAPP ──
+function waUrl(c){
+  let phone=(c.ph||'').replace(/\D/g,'');
+  if(phone.startsWith('0')&&phone.length===10) phone='233'+phone.slice(1);
+  else if(phone.length===9) phone='233'+phone;
+  if(!phone) return '';
+  const msg=encodeURIComponent(`Hello ${c.fn} ${c.ln},\n\nThis is Exprove Passport Limited regarding your ${svcLabel(c.sv)} application.\n\nRef: EXP-${c.id.slice(-6).toUpperCase()}\nStatus: ${c.status.charAt(0).toUpperCase()+c.status.slice(1)}\n\nPlease contact us if you have any questions.\n\n📞 ${settings.cphone||'0500639478'}\n✉ ${settings.cemail||''}\n\nYour Journey. Our Priority.`);
+  return `https://wa.me/${phone}?text=${msg}`;
+}
 function waContact(id){
   const c=clients.find(x=>x.id===id);if(!c)return;
-  const phone=c.ph.replace(/\D/g,'');
-  const msg=encodeURIComponent(`Hello ${c.fn} ${c.ln},\n\nThis is Exprove Passport Limited regarding your ${svcLabel(c.sv)} application.\n\nRef: EXP-${c.id.slice(-6).toUpperCase()}\nStatus: ${c.status.charAt(0).toUpperCase()+c.status.slice(1)}\n\nPlease contact us if you have any questions.\n\n📞 ${settings.cphone||'0500639478'}\n✉ ${settings.cemail||'michaelattaantwi5213@gmail.com'}\n\nYour Journey. Our Priority.`);
-  window.open(`https://wa.me/${phone}?text=${msg}`,'_blank');
+  const url=waUrl(c);
+  if(!url){notify('No phone number saved for this client.');return;}
+  const a=document.createElement('a');
+  a.href=url;a.target='_blank';a.rel='noopener noreferrer';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 
 // ── PRINT CLIENT FILE ──
