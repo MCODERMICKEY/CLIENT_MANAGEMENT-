@@ -476,12 +476,24 @@ tr:hover td{background:rgba(26,92,42,0.02);cursor:pointer}
           <div id="st-data" style="display:none">
             <h3>Data Management</h3>
             <p style="font-size:0.85rem;color:var(--muted);margin-bottom:18px">All data stored securely in your browser. Export regularly to back up.</p>
-            <div style="display:flex;gap:10px;flex-wrap:wrap">
-              <button class="btn btn-outline" onclick="exportCSV()">📥 Export Clients (CSV)</button>
-              <button class="btn btn-outline" onclick="exportJSON()">📦 Full Backup (JSON)</button>
-              <button class="btn btn-ghost" onclick="importJSON()">📤 Import Backup</button>
-              <input type="file" id="import-file" style="display:none" accept=".json" onchange="doImport(this)"/>
+
+            <div style="margin-bottom:18px;padding:16px;background:var(--cream);border-radius:10px;border:1px solid var(--border)">
+              <p style="font-size:0.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">📤 Export</p>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn btn-outline" onclick="exportCSV()">📥 Export Clients (CSV)</button>
+                <button class="btn btn-outline" onclick="exportJSON()">📦 Full Backup (JSON)</button>
+              </div>
             </div>
+
+            <div style="margin-bottom:18px;padding:16px;background:var(--cream);border-radius:10px;border:1px solid var(--border)">
+              <p style="font-size:0.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">📥 Import</p>
+              <p style="font-size:0.78rem;color:var(--muted);margin-bottom:10px">Importing will <strong style="color:var(--g2)">merge</strong> new records into your existing data. Clients already in the system will not be duplicated or overwritten.</p>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn btn-ghost" onclick="importJSON()">📂 Import &amp; Merge Backup</button>
+                <input type="file" id="import-file" style="display:none" accept=".json" onchange="doImport(this)"/>
+              </div>
+            </div>
+
             <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
               <p style="font-size:0.82rem;color:var(--red);font-weight:600;margin-bottom:10px">⚠ Danger Zone</p>
               <button class="btn btn-danger" onclick="clearAll()">🗑 Delete All Data</button>
@@ -1460,7 +1472,58 @@ function exportCSV(){
 }
 function exportJSON(){const bk=JSON.stringify({clients,settings,exported:new Date().toISOString()},null,2);dlFile('data:application/json;charset=utf-8,'+encodeURIComponent(bk),`Exprove_Backup_${new Date().toISOString().slice(0,10)}.json`);notify('Backup exported!');}
 function importJSON(){document.getElementById('import-file').click();}
-function doImport(input){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const bk=JSON.parse(e.target.result);if(bk.clients){clients=bk.clients;saveDB();refreshAll();notify(`${clients.length} clients imported!`);}else notify('Invalid backup file.','err');}catch{notify('Could not read file.','err');}};r.readAsText(f);}
+function doImport(input){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const bk=JSON.parse(e.target.result);
+      if(!bk.clients){notify('Invalid backup file — no client data found.','err');return;}
+
+      // ── MERGE: add only clients that don't already exist ──
+      // Match by ID first, then fall back to phone number as a duplicate check
+      let added=0, skipped=0;
+      bk.clients.forEach(incoming=>{
+        const existsById  = clients.some(c=>c.id===incoming.id);
+        const existsByPhone = incoming.ph && clients.some(c=>c.ph===incoming.ph);
+        if(existsById||existsByPhone){
+          skipped++;
+        } else {
+          // Assign a fresh ID if the incoming ID collides with an existing one by coincidence
+          if(!incoming.id) incoming.id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+          if(!incoming.created) incoming.created=new Date().toISOString();
+          clients.push(incoming);
+          added++;
+        }
+      });
+
+      // ── Merge invoices too, if present ──
+      let invAdded=0;
+      if(bk.invoices && Array.isArray(bk.invoices)){
+        bk.invoices.forEach(inv=>{
+          if(!invoices.some(i=>i.id===inv.id)){
+            invoices.push(inv);
+            invAdded++;
+          }
+        });
+      }
+
+      saveAll();
+      refreshAll();
+      input.value='';  // reset file input so same file can be re-imported if needed
+
+      let msg=`✓ Merged: ${added} new client${added!==1?'s':''} added.`;
+      if(skipped) msg+=` ${skipped} duplicate${skipped!==1?'s':''} skipped.`;
+      if(invAdded) msg+=` ${invAdded} invoice${invAdded!==1?'s':''} added.`;
+      notify(msg);
+      addAct(`Backup merged: +${added} clients, ${skipped} duplicates skipped`,'add');
+    }catch(err){
+      notify('Could not read file. Make sure it is a valid Exprove JSON backup.','err');
+      console.error('Import error:',err);
+    }
+  };
+  r.readAsText(f);
+}
 function clearAll(){if(!confirm('Delete ALL clients and documents permanently?'))return;clients=[];gdocs=[];activity=[];invoices=[];saveAll();refreshAll();notify('All data cleared.');}
 
 // ── SETTINGS ──
